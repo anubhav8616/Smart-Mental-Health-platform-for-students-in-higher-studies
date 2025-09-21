@@ -12,14 +12,11 @@ import {
   Target,
   Flame,
   BookOpen,
-  Sparkles,
-  Zap,
   Users,
-  CheckCircle,
-  Award,
   AlertTriangle,
   Moon,
-  Dumbbell
+  Dumbbell,
+  TrendingDown
 } from 'lucide-react';
 
 interface DashboardProps {
@@ -27,43 +24,72 @@ interface DashboardProps {
   userData: any;
 }
 
-export function Dashboard({ onSectionChange, userData }: DashboardProps) {
-  // State to control whether to show the assessment or the dashboard
-  const [showAssessment, setShowAssessment] = useState(false);
-  const [assessmentResults, setAssessmentResults] = useState<any>(null);
+// Helper to get the start of the current week (Monday)
+const getStartOfWeek = (date: Date) => {
+  const dt = new Date(date);
+  const day = dt.getDay();
+  const diff = dt.getDate() - day + (day === 0 ? -6 : 1); // adjust when day is sunday
+  return new Date(dt.setDate(diff));
+};
 
-  // On component load, check if an assessment has been completed
+export function Dashboard({ onSectionChange, userData }: DashboardProps) {
+  const [showAssessment, setShowAssessment] = useState(false);
+  const [assessmentHistory, setAssessmentHistory] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // On component load, check assessment frequency
   useEffect(() => {
-    const lastAssessment = localStorage.getItem(`lastAssessment_${userData?.id}`);
-    const savedResults = localStorage.getItem(`assessmentResults_${userData?.id}`);
+    if (!userData?.id) return;
+
+    const savedHistoryStr = localStorage.getItem(`assessmentHistory_${userData.id}`);
+    const savedHistory = savedHistoryStr ? JSON.parse(savedHistoryStr) : [];
+    setAssessmentHistory(savedHistory);
+
+    const startOfWeek = getStartOfWeek(new Date());
     
-    if (savedResults) {
-      setAssessmentResults(JSON.parse(savedResults));
-      setShowAssessment(false); // They have results, show the dashboard
+    const assessmentsThisWeek = savedHistory.filter((result: any) => {
+      const resultDate = new Date(result.timestamp);
+      return resultDate >= startOfWeek;
+    });
+
+    if (assessmentsThisWeek.length < 3) {
+      setShowAssessment(true);
     } else {
-      setShowAssessment(true); // No results found, force assessment
+      setShowAssessment(false);
     }
+    setIsLoading(false);
   }, [userData]);
 
-  // This function is called when the assessment is completed
   const handleAssessmentComplete = (results: any) => {
-    setAssessmentResults(results);
-    setShowAssessment(false); // Hide assessment and show dashboard
-    // Save results to local storage, tied to the user's ID
-    localStorage.setItem(`lastAssessment_${userData?.id}`, new Date().toISOString());
-    localStorage.setItem(`assessmentResults_${userData?.id}`, JSON.stringify(results));
+    const updatedHistory = [results, ...assessmentHistory];
+    setAssessmentHistory(updatedHistory);
+    setShowAssessment(false); 
+    localStorage.setItem(`assessmentHistory_${userData.id}`, JSON.stringify(updatedHistory));
   };
 
-  // If we need to show the assessment, render it and stop
+  if (isLoading) {
+    return <div className="min-h-screen bg-wellness-gradient flex items-center justify-center"><Brain className="w-12 h-12 text-primary animate-pulse" /></div>;
+  }
+  
   if (showAssessment) {
     return <SelfAssessment onComplete={handleAssessmentComplete} userData={userData} />;
   }
   
-  // --- Dashboard Display Logic (using real data if available) ---
+  const latestAssessment = assessmentHistory[0];
+  const previousAssessment = assessmentHistory[1];
+
+  const wellnessScore = latestAssessment
+    ? Math.round(Math.max(10, 100 - (((latestAssessment.scores.depression.score / 27) * 50) + ((latestAssessment.scores.anxiety.score / 21) * 50))))
+    : 72;
   
-  const wellnessScore = assessmentResults 
-    ? Math.max(20, 100 - (assessmentResults.scores.depression.score * 10) - (assessmentResults.scores.anxiety.score * 8))
-    : 72; // Placeholder
+  const getTrend = () => {
+    if (!latestAssessment || !previousAssessment) return { text: 'Stable', icon: TrendingUp };
+    const latestTotal = latestAssessment.scores.depression.score + latestAssessment.scores.anxiety.score;
+    const previousTotal = previousAssessment.scores.depression.score + previousAssessment.scores.anxiety.score;
+    if (latestTotal < previousTotal) return { text: 'Improving', icon: TrendingUp };
+    if (latestTotal > previousTotal) return { text: 'Declining', icon: TrendingDown };
+    return { text: 'Stable', icon: TrendingUp };
+  };
 
   const quickStats = [
     { 
@@ -73,28 +99,28 @@ export function Dashboard({ onSectionChange, userData }: DashboardProps) {
       color: wellnessScore > 70 ? 'text-warm-green' : wellnessScore > 50 ? 'text-sunny-orange' : 'text-mood-red',
     },
     { 
-      title: 'Mood Trend', 
-      value: assessmentResults ? 'Stable' : '7.2/10',
-      icon: TrendingUp,
+      title: 'Overall Trend', 
+      value: getTrend().text,
+      icon: getTrend().icon,
       color: 'text-calm-blue',
     },
     { 
       title: 'Current Streak', 
-      value: '1 day',
+      value: '1 day', // Note: This data comes from daily mood tracking, not the assessment.
       icon: Flame,
       color: 'text-sunny-orange',
     },
     { 
       title: 'Goals Completed', 
-      value: '0/3',
+      value: '0/3', // Note: This is part of a separate goal-setting feature.
       icon: Target,
       color: 'text-soft-purple',
     },
   ];
   
-    const recentActivities = [
+  const recentActivities = [
+    { action: 'Completed wellness check-in', time: 'Just now', icon: Brain, color: 'text-soft-purple', bgColor: 'bg-soft-purple/10' },
     { action: 'Completed daily mood check', time: '2 hours ago', icon: Heart, color: 'text-gentle-pink', bgColor: 'bg-gentle-pink/10' },
-    { action: 'Finished mindfulness session', time: '5 hours ago', icon: Brain, color: 'text-soft-purple', bgColor: 'bg-soft-purple/10' },
     { action: 'Connected with study group', time: '1 day ago', icon: Users, color: 'text-calm-blue', bgColor: 'bg-calm-blue/10' },
   ];
 
@@ -104,33 +130,32 @@ export function Dashboard({ onSectionChange, userData }: DashboardProps) {
     { title: 'Get 8 hours of sleep', category: 'Sleep', progress: 0, color: 'calm-blue' },
   ];
 
-
-  const mentalHealthMetrics = assessmentResults ? [
+  const mentalHealthMetrics = latestAssessment ? [
     {
       title: 'Depression',
-      score: assessmentResults.scores.depression.score,
-      severity: assessmentResults.scores.depression.severity,
-      color: assessmentResults.scores.depression.color,
-      maxScore: 6, // 2 questions, max score 3 each
+      score: latestAssessment.scores.depression.score,
+      severity: latestAssessment.scores.depression.severity,
+      color: latestAssessment.scores.depression.color,
+      maxScore: 27, 
       icon: Brain,
     },
     {
       title: 'Anxiety',
-      score: assessmentResults.scores.anxiety.score,
-      severity: assessmentResults.scores.anxiety.severity,
-      color: assessmentResults.scores.anxiety.color,
-      maxScore: 6, // 2 questions, max score 3 each
+      score: latestAssessment.scores.anxiety.score,
+      severity: latestAssessment.scores.anxiety.severity,
+      color: latestAssessment.scores.anxiety.color,
+      maxScore: 21,
       icon: Heart,
     },
     {
       title: 'Academic Stress',
-      score: assessmentResults.scores.academicStress.score,
-      severity: assessmentResults.scores.academicStress.severity,
-      color: assessmentResults.scores.academicStress.color,
-      maxScore: 8, // Based on a scale of 0-4 for two questions
+      score: latestAssessment.scores.academicStress.score,
+      severity: latestAssessment.scores.academicStress.severity,
+      color: latestAssessment.scores.academicStress.color,
+      maxScore: 8,
       icon: BookOpen,
     }
-  ] : []; // If no results, this will be empty
+  ] : [];
 
   return (
     <div className="min-h-screen bg-wellness-gradient">
@@ -162,12 +187,12 @@ export function Dashboard({ onSectionChange, userData }: DashboardProps) {
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
-            {assessmentResults && (
+            {latestAssessment && (
               <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.6 }}>
                 <Card className="border-0 shadow-lg">
                   <CardHeader>
                     <CardTitle className="text-lg">Your Wellness Snapshot</CardTitle>
-                    <p className="text-sm text-muted-foreground">Based on your initial assessment.</p>
+                    <p className="text-sm text-muted-foreground">Based on your latest assessment.</p>
                   </CardHeader>
                   <CardContent>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -180,7 +205,9 @@ export function Dashboard({ onSectionChange, userData }: DashboardProps) {
                           <Progress value={(metric.score / metric.maxScore) * 100} />
                           <div className="flex justify-between text-sm">
                             <span>Score: {metric.score}/{metric.maxScore}</span>
-                            <Badge variant={metric.color === 'green' ? 'default' : 'destructive'}>{metric.severity}</Badge>
+                             <Badge variant={metric.color === 'green' ? 'default' : metric.color === 'yellow' ? 'secondary' : 'destructive'}>
+                              {metric.severity}
+                            </Badge>
                           </div>
                         </div>
                       ))}
@@ -282,4 +309,3 @@ export function Dashboard({ onSectionChange, userData }: DashboardProps) {
     </div>
   );
 }
-
