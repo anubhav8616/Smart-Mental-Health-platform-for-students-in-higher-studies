@@ -63,7 +63,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "postinstall": "chmod +x node_modules/.bin/vite || true"
+    "postinstall": "node -e \"try{require('fs').chmodSync('node_modules/.bin/vite', 0o755)}catch(e){}\""
   },
   "engines": {
     "node": "22.x"

@@ -1,224 +1,397 @@
-import { motion, AnimatePresence } from 'motion/react';
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
-import { Button } from './ui/button';
-import { Input } from './ui/input';
-import { Label } from './ui/label';
-import { Avatar, AvatarFallback } from './ui/avatar';
-import { Switch } from './ui/switch';
-import { useAuth } from '../context/AuthContext';
-import { User, Edit3, Bell, Users, Save, X, CheckCircle } from 'lucide-react';
+// Profile.tsx
+import React, { useEffect, useState } from "react";
+import { supabase } from "../supabaseClient";
+import { useAuth } from "../context/AuthContext";
+import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import { Check, Upload, Save, Lock, Trash2, User, Bell, Users } from "lucide-react";
 
-// A helper hook to keep state in sync with localStorage
-function useLocalStorageState<T>(key: string, defaultValue: T): [T, (value: T) => void] {
-  const [value, setValue] = useState<T>(() => {
-    try {
-      const storedValue = window.localStorage.getItem(key);
-      return storedValue ? JSON.parse(storedValue) : defaultValue;
-    } catch (error) {
-      console.error(`Error reading localStorage key “${key}”:`, error);
-      return defaultValue;
-    }
-  });
-
-  const setStoredValue = (newValue: T) => {
-    try {
-      setValue(newValue);
-      window.localStorage.setItem(key, JSON.stringify(newValue));
-    } catch (error) {
-      console.error(`Error setting localStorage key “${key}”:`, error);
-    }
-  };
-
-  return [value, setStoredValue];
+/* ------- Simple Accessible Toggle (peer-based) ------- */
+function Toggle({
+  id,
+  checked,
+  onChange,
+}: {
+  id?: string;
+  checked: boolean;
+  onChange: (v: boolean) => void;
+}) {
+  return (
+    <label htmlFor={id} className="relative inline-flex items-center cursor-pointer">
+      <input
+        id={id}
+        type="checkbox"
+        checked={checked}
+        onChange={(e) => onChange(e.target.checked)}
+        className="sr-only peer"
+        aria-checked={checked}
+      />
+      <div className="w-11 h-6 bg-slate-200 peer-checked:bg-indigo-600 rounded-full transition-colors" />
+      <span className="absolute left-[2px] top-[2px] w-5 h-5 bg-white rounded-full transition-transform peer-checked:translate-x-5 flex items-center justify-center shadow">
+        {checked ? <Check className="w-3 h-3 text-indigo-600" /> : null}
+      </span>
+    </label>
+  );
 }
 
+/* ------- Profile type ------- */
+type ProfileShape = {
+  id: string | null;
+  username: string;
+  phone?: string | null;
+  hobbies?: string | null;
+  profile_pic?: string | null;
+  email_visible: boolean;
+  phone_visible: boolean;
+  all_notifications: boolean;
+  mood_reminders: boolean;
+  community_updates: boolean;
+  updated_at?: string | null;
+};
 
-export function Profile() {
+export default function Profile() {
   const { user } = useAuth();
-  const [username, setUsername] = useState('');
-  const [originalUsername, setOriginalUsername] = useState('');
-  const [isEditing, setIsEditing] = useState(false);
-  const [saveStatus, setSaveStatus] = useState<'idle' | 'success'>('idle');
-  const inputRef = useRef<HTMLInputElement>(null);
+  const userId = user?.id ?? null;
 
-  const userId = user?.id || 'guest';
+  const [loading, setLoading] = useState<boolean>(true);
+  const [saving, setSaving] = useState<boolean>(false);
+  const [profile, setProfile] = useState<ProfileShape>({
+    id: userId,
+    username: user?.email?.split("@")[0] ?? "User",
+    phone: null,
+    hobbies: null,
+    profile_pic: null,
+    email_visible: true,
+    phone_visible: false,
+    all_notifications: true,
+    mood_reminders: true,
+    community_updates: false,
+    updated_at: new Date().toISOString(),
+  });
+  const [status, setStatus] = useState<string | null>(null);
 
-  const [moodReminders, setMoodReminders] = useLocalStorageState(`moodReminders_${userId}`, true);
-  const [communityUpdates, setCommunityUpdates] = useLocalStorageState(`communityUpdates_${userId}`, false);
-
-  // Load username from localStorage on mount
+  /* -------- Load or create profile row -------- */
   useEffect(() => {
-    const savedUsername = localStorage.getItem(`username_${userId}`);
-    const initialUsername = savedUsername || user?.email?.split('@')[0] || 'User';
-    setUsername(initialUsername);
-    setOriginalUsername(initialUsername);
-  }, [user, userId]);
+    if (!userId) {
+      setLoading(false);
+      return;
+    }
 
-  const handleEditClick = () => {
-    setOriginalUsername(username);
-    setIsEditing(true);
-    // Focus the input field on the next render cycle
-    setTimeout(() => inputRef.current?.focus(), 0);
+    let mounted = true;
+    (async () => {
+      setLoading(true);
+      try {
+        const { data, error } = await supabase.from("profiles").select("*").eq("id", userId).single();
+        if (error) {
+          // no row found -> create default row
+          // (if RLS denies insert, make sure policy allows auth.uid() = id)
+          const defaultRow = {
+            id: userId,
+            username: user?.email?.split("@")[0] ?? "User",
+            email_visible: true,
+            phone_visible: false,
+            all_notifications: true,
+            mood_reminders: true,
+            community_updates: false,
+            profile_pic: null,
+            updated_at: new Date().toISOString(),
+          };
+          const { error: upsertErr, data: upsertData } = await supabase
+            .from("profiles")
+            .upsert(defaultRow)
+            .select()
+            .single();
+          if (upsertErr) {
+            console.error("Failed to upsert default profile:", upsertErr);
+          } else if (mounted && upsertData) {
+            setProfile((p) => ({ ...p, ...upsertData }));
+          }
+        } else {
+          if (mounted && data) setProfile((p) => ({ ...p, ...data }));
+        }
+      } catch (err) {
+        console.error("Load profile error", err);
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
+      }
+    })();
+
+    return () => {
+      mounted = false;
+    };
+  }, [userId, user]);
+
+  /* -------- Generic update: optimistic + full upsert --------
+     We update local state first, then upsert the ENTIRE profile snapshot to avoid
+     partially overwriting other fields. If the upsert fails we revert by refetching.
+  -------- */
+  const upsertProfileSnapshot = async (nextSnapshot: Partial<ProfileShape>) => {
+    if (!userId) return;
+    // build newest snapshot from current profile state
+    setProfile((prev) => {
+      const merged = { ...prev, ...nextSnapshot, updated_at: new Date().toISOString() };
+      // fire-and-forget upsert (we handle error below)
+      (async () => {
+        try {
+          const { data, error } = await supabase.from("profiles").upsert(merged).select().single();
+          if (error) {
+            console.error("Upsert error:", error);
+            // revert by refetching
+            const { data: fresh, error: fetchErr } = await supabase.from("profiles").select("*").eq("id", userId).single();
+            if (!fetchErr && fresh) setProfile(fresh);
+            setStatus("Failed to save changes");
+            setTimeout(()=>setStatus(null), 3000);
+          } else if (data) {
+            setProfile(data);
+            setStatus("Saved");
+            setTimeout(()=>setStatus(null), 1500);
+          }
+        } catch (err) {
+          console.error("Upsert exception:", err);
+          setStatus("Save error");
+          setTimeout(()=>setStatus(null), 3000);
+        }
+      })();
+      return merged;
+    });
   };
 
-  const handleSaveUsername = useCallback(() => {
-    if (!username.trim()) return; // Prevent saving empty username
-    
-    localStorage.setItem(`username_${userId}`, username.trim());
-    setIsEditing(false);
-    setSaveStatus('success');
-    
-    // Show success message for 3 seconds
-    setTimeout(() => setSaveStatus('idle'), 3000);
-    // Here you would also update it in your Supabase 'profiles' table
-  }, [username, userId]);
-
-  const handleCancelEdit = () => {
-    setUsername(originalUsername);
-    setIsEditing(false);
+  /* -------- field-specific wrapper for easier callbacks -------- */
+  const updateField = async <K extends keyof ProfileShape>(field: K, value: ProfileShape[K]) => {
+    await upsertProfileSnapshot({ [field]: value } as Partial<ProfileShape>);
   };
 
-  const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      handleSaveUsername();
-    } else if (e.key === 'Escape') {
-      handleCancelEdit();
+  /* -------- Save account info (username / phone / hobbies) in one shot -------- */
+  const saveAccountInfo = async () => {
+    if (!userId) return;
+    setSaving(true);
+    await upsertProfileSnapshot({
+      username: profile.username,
+      phone: profile.phone ?? null,
+      hobbies: profile.hobbies ?? null,
+    });
+    setSaving(false);
+  };
+
+  /* -------- Profile pic upload to Supabase Storage --------
+     - Requires a storage bucket called 'avatars' (public or use signed urls).
+  -------- */
+  const handleProfilePicUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !userId) return;
+    try {
+      // build unique path
+      const ext = file.name.split(".").pop();
+      const path = `${userId}/${Date.now()}.${ext}`;
+      // upload
+      const { error: uploadErr } = await supabase.storage.from("avatars").upload(path, file, { upsert: true });
+      if (uploadErr) {
+        console.error("Upload to storage failed:", uploadErr);
+        setStatus("Image upload failed");
+        setTimeout(()=>setStatus(null), 3000);
+        return;
+      }
+      // get public url
+      const { data: publicData } = supabase.storage.from("avatars").getPublicUrl(path);
+      const publicUrl = (publicData as any)?.publicUrl || null;
+      if (!publicUrl) {
+        console.warn("No public URL returned. You may need a public bucket or use signed URLs.");
+      }
+      // persist URL to profile
+      await updateField("profile_pic", publicUrl);
+    } catch (err) {
+      console.error("Profile pic error:", err);
+      setStatus("Image upload error");
+      setTimeout(()=>setStatus(null), 3000);
     }
   };
 
+  /* -------- Delete account (client-only button; server handling required) -------- */
+  const handleDeleteAccountClick = async () => {
+    // show confirm dialog (simple)
+    if (!confirm("Are you sure you want to delete your account? This cannot be undone.")) return;
+    try {
+      // Option A: delete profile row (the auth user deletion must be done securely server-side or via Supabase admin)
+      const { error } = await supabase.from("profiles").delete().eq("id", userId);
+      if (error) {
+        console.error("Failed to delete profile row:", error);
+        setStatus("Failed to delete account");
+      } else {
+        setStatus("Profile row deleted (auth deletion still required)");
+      }
+    } catch (err) {
+      console.error(err);
+      setStatus("Deletion error");
+    }
+    setTimeout(()=>setStatus(null), 3000);
+  };
+
+  if (loading) {
+    return <div className="p-8">Loading...</div>;
+  }
+
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 p-4 sm:p-6 lg:p-8 font-sans">
-      <div className="max-w-4xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="text-left mb-10"
-        >
-          <h1 className="text-3xl font-semibold text-slate-800 dark:text-slate-100">Profile Settings</h1>
-          <p className="text-slate-500 dark:text-slate-400 mt-2 leading-relaxed">
-            Manage your account settings, notifications, and personal details.
-          </p>
-        </motion.div>
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-slate-50 dark:from-slate-900 dark:to-slate-800 p-6">
+      <div className="max-w-6xl mx-auto">
+        <h1 className="text-3xl font-semibold mb-6">Profile Settings</h1>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
-          {/* Profile Summary Card (Left) */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            className="md:col-span-1"
-          >
-            <Card className="rounded-2xl border-slate-200/80 shadow-lg bg-white/80 backdrop-blur-sm dark:bg-slate-800/80 dark:border-slate-700">
-              <CardContent className="p-8 text-center flex flex-col items-center">
-                <div className="relative p-1 rounded-full bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500">
-                   <Avatar className="w-24 h-24" title={username}>
-                    <AvatarFallback className="text-4xl bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200" aria-hidden="true">
-                      {username ? username.charAt(0).toUpperCase() : <User />}
-                    </AvatarFallback>
-                  </Avatar>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-fr">
+          {/* Profile Pic */}
+          <Card className="rounded-2xl">
+            <CardHeader>
+              <CardTitle>Profile Picture</CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col items-center gap-4">
+              <Avatar className="w-24 h-24">
+                {profile.profile_pic ? (
+                  <AvatarImage src={profile.profile_pic} alt={profile.username ?? "avatar"} />
+                ) : (
+                  <AvatarFallback>{profile.username?.charAt(0)?.toUpperCase() ?? <User />}</AvatarFallback>
+                )}
+              </Avatar>
+
+              <div className="flex flex-col items-center gap-2">
+                <input id="avatarUpload" type="file" accept="image/*" onChange={handleProfilePicUpload} className="hidden" />
+                <label htmlFor="avatarUpload" className="text-indigo-600 cursor-pointer inline-flex items-center gap-2">
+                  <Upload className="w-4 h-4" /> Upload photo
+                </label>
+                <p className="text-xs text-slate-500">Recommended: square image, under 2MB</p>
+
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Account Info */}
+          <Card className="rounded-2xl col-span-1 lg:col-span-2">
+            <CardHeader>
+              <CardTitle>Account Info</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label>Display Name</Label>
+                <div className="flex gap-3 mt-2">
+                  <Input
+                    value={profile.username}
+                    onChange={(e) => setProfile(p => ({ ...p, username: e.target.value }))}
+                    onKeyDown={(e) => { if (e.key === "Enter") saveAccountInfo(); }}
+                  />
+                  <Button onClick={saveAccountInfo} size="sm" disabled={saving} className="flex items-center gap-2">
+                    <Save className="w-4 h-4" /> {saving ? "Saving..." : "Save"}
+                  </Button>
                 </div>
-                <h2 className="text-xl font-semibold mt-4 text-slate-800 dark:text-slate-100 truncate w-full">{username}</h2>
-                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 truncate w-full">{user?.email}</p>
-              </CardContent>
-            </Card>
-          </motion.div>
+              </div>
 
-          {/* Settings Card (Right) */}
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="md:col-span-2"
-          >
-            <Card className="rounded-2xl border-slate-200/80 shadow-lg bg-white/80 backdrop-blur-sm dark:bg-slate-800/80 dark:border-slate-700">
-              <CardHeader className="p-8 border-b border-slate-200 dark:border-slate-700">
-                <CardTitle className="text-lg font-medium text-slate-800 dark:text-slate-100">Account Information</CardTitle>
-              </CardHeader>
-              <CardContent className="p-8 space-y-8">
-                {/* Username Section */}
-                <div className="space-y-2">
-                  <Label htmlFor="username" className="font-medium text-slate-700 dark:text-slate-300">Display Name</Label>
-                  <div className="flex items-center gap-3">
-                    <Input
-                      id="username"
-                      ref={inputRef}
-                      value={username}
-                      onChange={(e) => setUsername(e.target.value)}
-                      onKeyDown={handleInputKeyDown}
-                      disabled={!isEditing}
-                      className="disabled:cursor-not-allowed disabled:bg-slate-100 dark:disabled:bg-slate-700 focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2 dark:bg-slate-900"
-                    />
-                    {isEditing ? (
-                      <>
-                        <Button onClick={handleSaveUsername} size="sm" className="bg-indigo-600 hover:bg-indigo-700 text-white" disabled={!username.trim()}>
-                          <Save className="w-4 h-4 mr-2" /> Save
-                        </Button>
-                        <Button onClick={handleCancelEdit} variant="ghost" size="icon"><X className="w-4 h-4 text-slate-500" /></Button>
-                      </>
-                    ) : (
-                      <Button onClick={handleEditClick} variant="outline" size="sm" className="dark:border-slate-600">
-                        <Edit3 className="w-4 h-4 mr-2" /> Edit
-                      </Button>
-                    )}
-                  </div>
-                  <AnimatePresence>
-                    {saveStatus === 'success' && (
-                      <motion.div
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        aria-live="polite"
-                        className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400 mt-2"
-                      >
-                        <CheckCircle className="w-4 h-4" /> Username saved successfully.
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+              <div>
+                <Label>Phone (optional)</Label>
+                <div className="flex gap-3 mt-2">
+                  <Input
+                    value={profile.phone ?? ""}
+                    placeholder="+91 9876543210"
+                    onChange={(e) => setProfile(p => ({ ...p, phone: e.target.value }))}
+                    onKeyDown={(e) => { if (e.key === "Enter") saveAccountInfo(); }}
+                  />
+                  <Button onClick={saveAccountInfo} size="sm" className="flex items-center gap-2">
+                    <Save className="w-4 h-4" /> Save
+                  </Button>
                 </div>
+              </div>
 
-                {/* Notifications Section */}
-                <div className="space-y-2">
-                  <h3 className="font-medium text-slate-700 dark:text-slate-300">Notifications</h3>
-                  <p className="text-sm text-slate-500 dark:text-slate-400">Manage how you receive updates from the platform.</p>
-                  <div className="space-y-3 pt-2">
-                    <Label
-                      htmlFor="mood-reminders"
-                      className="flex items-center justify-between p-4 rounded-lg bg-slate-50 dark:bg-slate-700/50 cursor-pointer transition-colors hover:bg-slate-100 dark:hover:bg-slate-700"
-                    >
-                      <div className="flex items-center gap-4">
-                        <Bell className="w-5 h-5 text-indigo-500" />
-                        <span className="font-medium text-slate-700 dark:text-slate-200">Mood Check-in Reminders</span>
-                      </div>
-                      <Switch 
-                        id="mood-reminders" 
-                        checked={moodReminders}
-                        onCheckedChange={setMoodReminders}
-                        aria-label="Toggle mood check-in reminders"
-                      />
-                    </Label>
-                    <Label
-                      htmlFor="community-updates"
-                      className="flex items-center justify-between p-4 rounded-lg bg-slate-50 dark:bg-slate-700/50 cursor-pointer transition-colors hover:bg-slate-100 dark:hover:bg-slate-700"
-                    >
-                      <div className="flex items-center gap-4">
-                        <Users className="w-5 h-5 text-indigo-500" />
-                        <span className="font-medium text-slate-700 dark:text-slate-200">Community Updates</span>
-                      </div>
-                      <Switch 
-                        id="community-updates" 
-                        checked={communityUpdates}
-                        onCheckedChange={setCommunityUpdates}
-                        aria-label="Toggle community updates"
-                      />
-                    </Label>
+              <div>
+                <Label>Hobbies / Interests</Label>
+                <Input
+                  value={profile.hobbies ?? ""}
+                  onChange={(e) => setProfile(p => ({ ...p, hobbies: e.target.value }))}
+                  placeholder="Reading, Coding, Music"
+                />
+                <p className="text-xs text-slate-500 mt-1">Comma separated</p>
+              </div>
+
+              <div>
+                <Button variant="outline" className="flex items-center gap-2">
+                  <Lock className="w-4 h-4" /> Change password
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Notifications */}
+          <Card className="rounded-2xl">
+            <CardHeader>
+              <CardTitle>Notifications</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Bell className="w-5 h-5 text-indigo-500" />
+                  <div>
+                    <div className="font-medium">All notifications</div>
+                    <div className="text-sm text-slate-500">Master switch</div>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-          </motion.div>
+                <Toggle checked={!!profile.all_notifications} onChange={(v) => updateField("all_notifications", v)} />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Bell className="w-5 h-5 text-indigo-500" />
+                  <div>
+                    <div className="font-medium">Mood check-in reminders</div>
+                    <div className="text-sm text-slate-500">Periodic prompts</div>
+                  </div>
+                </div>
+                <Toggle checked={!!profile.mood_reminders} onChange={(v) => updateField("mood_reminders", v)} />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Users className="w-5 h-5 text-indigo-500" />
+                  <div>
+                    <div className="font-medium">Community updates</div>
+                    <div className="text-sm text-slate-500">Group activity</div>
+                  </div>
+                </div>
+                <Toggle checked={!!profile.community_updates} onChange={(v) => updateField("community_updates", v)} />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Privacy & Security */}
+          <Card className="rounded-2xl">
+            <CardHeader>
+              <CardTitle>Privacy & Security</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="font-medium">Email visibility</div>
+                  <div className="text-sm text-slate-500">Show email on profile</div>
+                </div>
+                <Toggle checked={!!profile.email_visible} onChange={(v) => updateField("email_visible", v)} />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="font-medium">Phone visibility</div>
+                  <div className="text-sm text-slate-500">Show phone on profile</div>
+                </div>
+                <Toggle checked={!!profile.phone_visible} onChange={(v) => updateField("phone_visible", v)} />
+              </div>
+
+              <div>
+                <Button variant="destructive" onClick={handleDeleteAccountClick} className="flex items-center gap-2">
+                  <Trash2 className="w-4 h-4" /> Delete Account
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </div>
+
+        {status && <div className="mt-4 text-sm text-slate-700">{status}</div>}
       </div>
     </div>
   );
