@@ -43,7 +43,8 @@ export function Resources() {
       readTime: 8,
       popularity: 142,
       tags: ["anxiety", "academic", "coping"],
-      image: "https://images.unsplash.com/photo-1635373390303-cc78167278ee?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtZW50YWwlMjBoZWFsdGglMjB3ZWxsbmVzcyUyMG1lZGl0YXRpb258ZW58MXx8fHwxNzU3MTMwMzIxfDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral"
+      image: "https://images.unsplash.com/photo-1635373390303-cc78167278ee?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtZW50YWwlMjBoZWFsdGglMjB3ZWxsbmVzcyUyMG1lZGl0YXRpb258ZW58MXx8fHwxNzU3MTMwMzIxfDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
+      href: "https://scholar.google.co.in/scholar?q=article+on+understanding+and+managing+academic+anxiety&hl=en&as_sdt=0&as_vis=1&oi=scholart"
     },
     {
       id: 2,
@@ -53,7 +54,8 @@ export function Resources() {
       readTime: 12,
       popularity: 89,
       tags: ["sleep", "health", "productivity"],
-      image: "https://images.unsplash.com/photo-1660128356943-e1f893a56a89?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzdHVkZW50JTIwc3VwcG9ydCUyMGNvdW5zZWxpbmd8ZW58MXx8fHwxNzU3MTc0OTU3fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral"
+      image: "https://images.unsplash.com/photo-1660128356943-e1f893a56a89?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzdHVkZW50JTIwc3VwcG9ydCUyMGNvdW5zZWxpbmd8ZW58MXx8fHwxNzU3MTc0OTU3fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
+      href: "https://pmc.ncbi.nlm.nih.gov/articles/PMC4075951/"
     },
     {
       id: 3,
@@ -63,7 +65,9 @@ export function Resources() {
       readTime: 10,
       popularity: 267,
       tags: ["resilience", "mindset", "growth"],
-      image: "https://images.unsplash.com/photo-1620442771341-4e157b3b6cdf?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjb21tdW5pdHklMjBzdXBwb3J0JTIwZ3JvdXB8ZW58MXx8fHwxNzU3MjE3NjQwfDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral"
+      image: "https://images.unsplash.com/photo-1620442771341-4e157b3b6cdf?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjb21tdW5pdHklMjBzdXBwb3J0JTIwZ3JvdXB8ZW58MXx8fHwxNzU3MjE3NjQwfDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
+      // FIX: Added the href property for the third card
+      href: "https://www.helpguide.org/mental-health/stress/surviving-tough-times"
     },
     {
       id: 4,
@@ -73,7 +77,9 @@ export function Resources() {
       readTime: 6,
       popularity: 156,
       tags: ["motivation", "goals", "purpose"],
-      image: "https://images.unsplash.com/photo-1635373390303-cc78167278ee?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtZW50YWwlMjBoZWFsdGglMjB3ZWxsbmVzcyUyMG1lZGl0YXRpb258ZW58MXx8fHwxNzU3MTMwMzIxfDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral"
+      image: "https://images.unsplash.com/photo-1635373390303-cc78167278ee?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtZW50YWwlMjBoZWFsdGglMjB3ZWxsbmVzcyUyMG1lZGl0YXRpb258ZW58MXx8fHwxNzU3MTMwMzIxfDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
+      // FIX: Added the href property for the fourth card
+      href: "https://www.verywellmind.com/what-is-intrinsic-motivation-2795385"
     }
   ]
 
@@ -186,7 +192,7 @@ export function Resources() {
             transition={{ delay: 0.2, duration: 0.6 }}
           >
             <div className="flex flex-wrap gap-2">
-              {categories.map((category, index) => (
+              {categories.map((category) => (
                 <Button
                   key={category.id}
                   variant={activeCategory === category.id ? "default" : "outline"}
@@ -194,7 +200,7 @@ export function Resources() {
                   onClick={() => setActiveCategory(category.id)}
                   className={`${
                     activeCategory === category.id
-                      ? 'bg-gradient-to-r from-green-500 to-teal-500'
+                      ? 'bg-gradient-to-r from-green-500 to-teal-500 text-white'
                       : 'bg-white/80 hover:bg-white'
                   }`}
                 >
@@ -272,7 +278,15 @@ export function Resources() {
                           </Badge>
                         ))}
                       </div>
-                      <Button className="w-full bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600">
+                      <Button 
+                        className="w-full bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 disabled:opacity-50"
+                        onClick={() => {
+                          if (article.href) {
+                            window.open(article.href, '_blank', 'noopener,noreferrer');
+                          }
+                        }}
+                        disabled={!article.href}
+                      >
                         Read Article
                       </Button>
                     </CardContent>
