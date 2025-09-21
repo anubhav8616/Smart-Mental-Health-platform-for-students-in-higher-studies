@@ -24,12 +24,15 @@ interface DashboardProps {
   userData: any;
 }
 
-// Helper to get the start of the current week (Monday)
+// FIX: Updated helper to get the start of the current week (Monday at midnight)
 const getStartOfWeek = (date: Date) => {
   const dt = new Date(date);
   const day = dt.getDay();
   const diff = dt.getDate() - day + (day === 0 ? -6 : 1); // adjust when day is sunday
-  return new Date(dt.setDate(diff));
+  const monday = new Date(dt.setDate(diff));
+  // Set time to the beginning of the day to ensure accurate comparison
+  monday.setHours(0, 0, 0, 0); 
+  return monday;
 };
 
 export function Dashboard({ onSectionChange, userData }: DashboardProps) {
