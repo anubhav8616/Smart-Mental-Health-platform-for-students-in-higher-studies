@@ -66,7 +66,6 @@ export function Resources() {
       popularity: 267,
       tags: ["resilience", "mindset", "growth"],
       image: "https://images.unsplash.com/photo-1620442771341-4e157b3b6cdf?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjb21tdW5pdHklMjBzdXBwb3J0JTIwZ3JvdXB8ZW58MXx8fHwxNzU3MjE3NjQwfDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
-      // FIX: Added the href property for the third card
       href: "https://www.helpguide.org/mental-health/stress/surviving-tough-times"
     },
     {
@@ -78,7 +77,6 @@ export function Resources() {
       popularity: 156,
       tags: ["motivation", "goals", "purpose"],
       image: "https://images.unsplash.com/photo-1635373390303-cc78167278ee?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtZW50YWwlMjBoZWFsdGglMjB3ZWxsbmVzcyUyMG1lZGl0YXRpb258ZW58MXx8fHwxNzU3MTMwMzIxfDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
-      // FIX: Added the href property for the fourth card
       href: "https://www.verywellmind.com/what-is-intrinsic-motivation-2795385"
     }
   ]
@@ -90,7 +88,9 @@ export function Resources() {
       duration: "5:32",
       category: "anxiety",
       thumbnail: "https://images.unsplash.com/photo-1635373390303-cc78167278ee?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtZW50YWwlMjBoZWFsdGglMjB3ZWxsbmVzcyUyMG1lZGl0YXRpb258ZW58MXx8fHwxNzU3MTMwMzIxfDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
-      views: 1205
+      views: 1205,
+      // FIX: Added video href
+      href: "https://www.youtube.com/watch?v=oN8xV3Kb5-Q"
     },
     {
       id: 2,
@@ -98,7 +98,9 @@ export function Resources() {
       duration: "15:45",
       category: "stress",
       thumbnail: "https://images.unsplash.com/photo-1660128356943-e1f893a56a89?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzdHVkZW50JTIwc3VwcG9ydCUyMGNvdW5zZWxpbmd8ZW58MXx8fHwxNzU3MTc0OTU3fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
-      views: 892
+      views: 892,
+      // FIX: Added video href
+      href: "https://www.youtube.com/watch?v=SNqYG95j_UQ"
     },
     {
       id: 3,
@@ -106,7 +108,9 @@ export function Resources() {
       duration: "25:12",
       category: "sleep",
       thumbnail: "https://images.unsplash.com/photo-1620442771341-4e157b3b6cdf?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjb21tdW5pdHklMjBzdXBwb3J0JTIwZ3JvdXB8ZW58MXx8fHwxNzU3MjE3NjQwfDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
-      views: 2134
+      views: 2134,
+      // FIX: Added video href
+      href: "https://www.youtube.com/watch?v=huTPNDi6WJ8"
     }
   ]
 
@@ -332,7 +336,16 @@ export function Resources() {
                         </Badge>
                         <span>{video.views.toLocaleString()} views</span>
                       </div>
-                      <Button className="w-full bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600">
+                      {/* FIX: Added onClick handler and disabled state for the video button */}
+                      <Button 
+                        className="w-full bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 disabled:opacity-50"
+                        onClick={() => {
+                          if (video.href) {
+                            window.open(video.href, '_blank', 'noopener,noreferrer');
+                          }
+                        }}
+                        disabled={!video.href}
+                      >
                         Watch Video
                       </Button>
                     </CardContent>
