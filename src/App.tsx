@@ -13,7 +13,7 @@ import { Community } from './components/community';
 import { StudentReports } from './components/student-reports';
 import { AdminReports } from './components/admin-reports';
 import { CrisisSupport } from './components/crisis-support';
-import { Profile } from './components/profile'; // ✨ 1. IMPORT THE PROFILE COMPONENT
+import  Profile  from './components/profile';
 import { useAuth } from './context/AuthContext';
 
 export default function App() {
