@@ -5,10 +5,10 @@ import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Progress } from './ui/progress';
 import { SelfAssessment } from './self-assessment'; // Import the new component
-import { 
-  Heart, 
-  Brain, 
-  TrendingUp, 
+import {
+  Heart,
+  Brain,
+  TrendingUp,
   Target,
   Flame,
   BookOpen,
@@ -24,14 +24,12 @@ interface DashboardProps {
   userData: any;
 }
 
-// FIX: Updated helper to get the start of the current week (Monday at midnight)
 const getStartOfWeek = (date: Date) => {
   const dt = new Date(date);
   const day = dt.getDay();
   const diff = dt.getDate() - day + (day === 0 ? -6 : 1); // adjust when day is sunday
   const monday = new Date(dt.setDate(diff));
-  // Set time to the beginning of the day to ensure accurate comparison
-  monday.setHours(0, 0, 0, 0); 
+  monday.setHours(0, 0, 0, 0);
   return monday;
 };
 
@@ -40,7 +38,6 @@ export function Dashboard({ onSectionChange, userData }: DashboardProps) {
   const [assessmentHistory, setAssessmentHistory] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // On component load, check assessment frequency
   useEffect(() => {
     if (!userData?.id) return;
 
@@ -63,10 +60,19 @@ export function Dashboard({ onSectionChange, userData }: DashboardProps) {
     setIsLoading(false);
   }, [userData]);
 
+  // FIX: This function now reads the latest history directly from localStorage
+  // before updating, preventing stale state issues.
   const handleAssessmentComplete = (results: any) => {
-    const updatedHistory = [results, ...assessmentHistory];
+    // 1. Read the absolute latest history from storage
+    const currentHistoryStr = localStorage.getItem(`assessmentHistory_${userData.id}`);
+    const currentHistory = currentHistoryStr ? JSON.parse(currentHistoryStr) : [];
+    
+    // 2. Add the new result to it
+    const updatedHistory = [results, ...currentHistory];
+
+    // 3. Update the state for the current view and save back to storage
     setAssessmentHistory(updatedHistory);
-    setShowAssessment(false); 
+    setShowAssessment(false);
     localStorage.setItem(`assessmentHistory_${userData.id}`, JSON.stringify(updatedHistory));
   };
 
@@ -109,13 +115,13 @@ export function Dashboard({ onSectionChange, userData }: DashboardProps) {
     },
     { 
       title: 'Current Streak', 
-      value: '1 day', // Note: This data comes from daily mood tracking, not the assessment.
+      value: '1 day',
       icon: Flame,
       color: 'text-sunny-orange',
     },
     { 
       title: 'Goals Completed', 
-      value: '0/3', // Note: This is part of a separate goal-setting feature.
+      value: '0/3',
       icon: Target,
       color: 'text-soft-purple',
     },
