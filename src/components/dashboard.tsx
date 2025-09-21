@@ -1,4 +1,4 @@
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
@@ -16,7 +16,8 @@ import {
   AlertTriangle,
   Moon,
   Dumbbell,
-  TrendingDown
+  TrendingDown,
+  ClipboardCheck, // New Icon
 } from 'lucide-react';
 
 interface DashboardProps {
@@ -37,9 +38,14 @@ export function Dashboard({ onSectionChange, userData }: DashboardProps) {
   const [showAssessment, setShowAssessment] = useState(false);
   const [assessmentHistory, setAssessmentHistory] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [canTakeAssessment, setCanTakeAssessment] = useState(false);
+  const [assessmentsThisWeekCount, setAssessmentsThisWeekCount] = useState(0);
 
   useEffect(() => {
-    if (!userData?.id) return;
+    if (!userData?.id) {
+        setIsLoading(false);
+        return;
+    };
 
     const savedHistoryStr = localStorage.getItem(`assessmentHistory_${userData.id}`);
     const savedHistory = savedHistoryStr ? JSON.parse(savedHistoryStr) : [];
@@ -52,16 +58,21 @@ export function Dashboard({ onSectionChange, userData }: DashboardProps) {
       return resultDate >= startOfWeek;
     });
 
-    if (assessmentsThisWeek.length < 3) {
-      setShowAssessment(true);
+    const count = assessmentsThisWeek.length;
+    setAssessmentsThisWeekCount(count);
+
+    if (count < 3) {
+      setCanTakeAssessment(true);
     } else {
-      setShowAssessment(false);
+      setCanTakeAssessment(false);
     }
+    
+    // We no longer automatically show the assessment
+    // setShowAssessment(false) is the default state
+    
     setIsLoading(false);
   }, [userData]);
 
-  // FIX: This function now reads the latest history directly from localStorage
-  // before updating, preventing stale state issues.
   const handleAssessmentComplete = (results: any) => {
     // 1. Read the absolute latest history from storage
     const currentHistoryStr = localStorage.getItem(`assessmentHistory_${userData.id}`);
@@ -72,8 +83,20 @@ export function Dashboard({ onSectionChange, userData }: DashboardProps) {
 
     // 3. Update the state for the current view and save back to storage
     setAssessmentHistory(updatedHistory);
-    setShowAssessment(false);
     localStorage.setItem(`assessmentHistory_${userData.id}`, JSON.stringify(updatedHistory));
+
+    // 4. Recalculate weekly count and ability to take assessment
+    const startOfWeek = getStartOfWeek(new Date());
+    const assessmentsThisWeek = updatedHistory.filter((result: any) => {
+      const resultDate = new Date(result.timestamp);
+      return resultDate >= startOfWeek;
+    });
+    const newCount = assessmentsThisWeek.length;
+    setAssessmentsThisWeekCount(newCount);
+    setCanTakeAssessment(newCount < 3);
+
+    // 5. Hide the assessment component
+    setShowAssessment(false);
   };
 
   if (isLoading) {
@@ -196,6 +219,35 @@ export function Dashboard({ onSectionChange, userData }: DashboardProps) {
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
+            
+            {/* --- NEW ASSESSMENT CARD --- */}
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
+                <Card className="border-0 shadow-lg bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/50 dark:to-indigo-900/50">
+                    <CardContent className="p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+                        <div className="flex items-center gap-4">
+                            <div className="p-3 bg-white dark:bg-slate-800 rounded-xl shadow">
+                                <ClipboardCheck className="w-8 h-8 text-indigo-500" />
+                            </div>
+                            <div>
+                                <h3 className="font-semibold text-lg">Wellness Check-in</h3>
+                                <p className="text-sm text-muted-foreground">
+                                    {canTakeAssessment 
+                                        ? `You have ${3 - assessmentsThisWeekCount} assessments left this week.`
+                                        : 'You have completed all assessments for this week.'}
+                                </p>
+                            </div>
+                        </div>
+                        <Button 
+                            onClick={() => setShowAssessment(true)} 
+                            disabled={!canTakeAssessment}
+                            className="w-auto"
+                        >
+                            {canTakeAssessment ? 'Take Assessment' : 'Weekly Limit Reached'}
+                        </Button>
+                    </CardContent>
+                </Card>
+            </motion.div>
+
             {latestAssessment && (
               <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.6 }}>
                 <Card className="border-0 shadow-lg">
