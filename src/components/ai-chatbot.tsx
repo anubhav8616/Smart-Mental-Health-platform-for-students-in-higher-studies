@@ -1,70 +1,116 @@
-import { motion } from 'motion/react'
-import { useState, useRef, useEffect } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
-import { Button } from './ui/button'
-import { Input } from './ui/input'
-import { Badge } from './ui/badge'
-import { Avatar, AvatarFallback } from './ui/avatar'
-import { ScrollArea } from './ui/scroll-area'
-import { Separator } from './ui/separator'
+import { motion } from 'framer-motion';
+import React, { useState, useRef, useEffect } from 'react';
 import { 
   Send, 
   Bot, 
   User, 
-  Heart, 
-  Brain, 
-  AlertTriangle,
-  ThumbsUp,
-  ThumbsDown,
   Sparkles,
-  MessageCircle,
-  Clock,
   Shield,
-  Lightbulb,
-  Zap
-} from 'lucide-react'
+} from 'lucide-react';
+
+// --- Helper UI Components (to resolve import errors) ---
+// These are simplified versions of the original UI components.
+
+const Card = ({ className, children }: { className?: string; children: React.ReactNode }) => (
+  <div className={`bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 ${className}`}>
+    {children}
+  </div>
+);
+
+const CardHeader = ({ className, children }: { className?: string; children: React.ReactNode }) => (
+  <div className={`p-6 ${className}`}>{children}</div>
+);
+
+const CardTitle = ({ className, children }: { className?: string; children: React.ReactNode }) => (
+  <h3 className={`font-semibold tracking-tight text-lg ${className}`}>{children}</h3>
+);
+
+const CardContent = ({ className, children }: { className?: string; children: React.ReactNode }) => (
+  <div className={`p-6 pt-0 ${className}`}>{children}</div>
+);
+
+const Button = ({ className, children, ...props }: React.ButtonHTMLAttributes<HTMLButtonElement>) => (
+  <button className={`inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 ${className}`} {...props}>
+    {children}
+  </button>
+);
+
+const Input = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(({ className, ...props }, ref) => (
+  <input className={`flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${className}`} ref={ref} {...props} />
+));
+
+const Badge = ({ className, children }: { className?: string; children: React.ReactNode }) => (
+  <div className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 ${className}`}>
+    {children}
+  </div>
+);
+
+const Avatar = ({ className, children }: { className?: string; children: React.ReactNode }) => (
+  <div className={`relative flex h-10 w-10 shrink-0 overflow-hidden rounded-full ${className}`}>
+    {children}
+  </div>
+);
+
+const AvatarFallback = ({ className, children }: { className?: string; children: React.ReactNode }) => (
+  <span className={`flex h-full w-full items-center justify-center rounded-full bg-muted ${className}`}>
+    {children}
+  </span>
+);
+
+// FIX: Wrapped ScrollArea with React.forwardRef to properly accept the ref.
+const ScrollArea = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(({ className, children, ...props }, ref) => (
+    <div ref={ref} className={`relative overflow-y-auto ${className}`} {...props}>
+        {children}
+    </div>
+));
+
+
+const Separator = ({ className }: { className?: string }) => (
+  <div className={`shrink-0 bg-border h-[1px] w-full ${className}`} />
+);
+
+//
+// ─── THERAPEUTIC PERSONA PROMPT ─────────────────────────────────────────────────
+//
+
+const systemPrompt = {
+  role: "system",
+  content: `You are a supportive and empathetic AI mental health companion for university students. Your name is 'MindMate'.
+  - Your primary goal is to provide a safe, non-judgmental space for students to express their feelings.
+  - Always respond with compassion, understanding, and encouragement.
+  - Use a warm and gentle tone. Keep your responses concise and easy to understand.
+  - Never give medical advice, a diagnosis, or tell the user what to do. Instead, empower them by exploring their feelings and suggesting coping strategies or resources.
+  - Ask open-ended questions to encourage reflection (e.g., "How did that make you feel?", "What was that experience like for you?").
+  - If the user expresses feelings of sadness or stress, validate their emotions (e.g., "It sounds like you're going through a lot right now," "That sounds incredibly difficult.").
+  - If the user is in crisis (mentions self-harm, suicide, or wanting to die), you MUST respond with: "I'm very concerned by what you've shared. It's incredibly brave of you to talk about this, and I want you to know that help is available right now. Please reach out to a crisis hotline or a mental health professional immediately. You are not alone in this." and then provide a list of emergency resources.
+  - Remember the conversation history and refer to it to show you are listening.`,
+};
+
+//
+// ─── COMPONENT INTERFACES ───────────────────────────────────────────────────────
+//
 
 interface Message {
   id: string
   content: string
-  sender: 'user' | 'bot'
-  timestamp: string
-  sentiment?: 'positive' | 'neutral' | 'negative' | 'crisis'
-  confidence?: number
-  suggestions?: string[]
-  resources?: Array<{
-    title: string
-    type: 'technique' | 'resource' | 'emergency'
-    action: string
-  }>
+  role: 'user' | 'assistant' 
 }
+
+//
+// ─── MAIN CHATBOT COMPONENT ─────────────────────────────────────────────────────
+//
 
 export function AIChatbot() {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      content: "Hi! I'm your AI mental health companion. I'm here to listen, provide support, and help you with coping strategies. How are you feeling today?",
-      sender: 'bot',
-      timestamp: new Date().toISOString(),
-      sentiment: 'positive'
+      content: "Hello! I'm your AI mental health companion. I'm here to listen, provide support, and help you with coping strategies. How are you feeling today?",
+      role: 'assistant',
     }
   ])
   const [inputMessage, setInputMessage] = useState('')
   const [isTyping, setIsTyping] = useState(false)
-  const [conversationContext, setConversationContext] = useState<{
-    userMood: string
-    topics: string[]
-    riskLevel: 'low' | 'medium' | 'high'
-    sessionDuration: number
-  }>({
-    userMood: 'neutral',
-    topics: [],
-    riskLevel: 'low',
-    sessionDuration: 0
-  })
-  
   const scrollAreaRef = useRef<HTMLDivElement>(null)
-  const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     // Auto-scroll to bottom when new messages arrive
@@ -73,515 +119,204 @@ export function AIChatbot() {
     }
   }, [messages])
 
-  useEffect(() => {
-    // Track session duration
-    const interval = setInterval(() => {
-      setConversationContext(prev => ({
-        ...prev,
-        sessionDuration: prev.sessionDuration + 1
-      }))
-    }, 60000) // Update every minute
-
-    return () => clearInterval(interval)
-  }, [])
-
-  const analyzeSentiment = (text: string): { sentiment: 'positive' | 'neutral' | 'negative' | 'crisis', confidence: number } => {
-    const lowerText = text.toLowerCase()
-    
-    // Crisis indicators
-    const crisisKeywords = ['suicide', 'kill myself', 'end it all', 'no point', 'hurt myself', 'die', 'worthless']
-    const hasCrisisIndicators = crisisKeywords.some(keyword => lowerText.includes(keyword))
-    
-    if (hasCrisisIndicators) {
-      return { sentiment: 'crisis', confidence: 0.9 }
-    }
-
-    // Negative sentiment
-    const negativeKeywords = ['sad', 'depressed', 'anxious', 'overwhelmed', 'stressed', 'lonely', 'frustrated', 'hopeless', 'tired', 'angry']
-    const negativeCount = negativeKeywords.filter(keyword => lowerText.includes(keyword)).length
-
-    // Positive sentiment
-    const positiveKeywords = ['happy', 'good', 'great', 'excited', 'grateful', 'better', 'accomplished', 'proud', 'calm', 'peaceful']
-    const positiveCount = positiveKeywords.filter(keyword => lowerText.includes(keyword)).length
-
-    if (negativeCount > positiveCount && negativeCount > 0) {
-      return { sentiment: 'negative', confidence: Math.min(0.8, negativeCount * 0.2) }
-    } else if (positiveCount > negativeCount && positiveCount > 0) {
-      return { sentiment: 'positive', confidence: Math.min(0.8, positiveCount * 0.2) }
-    }
-
-    return { sentiment: 'neutral', confidence: 0.5 }
-  }
-
-  const generateResponse = (userMessage: string, sentiment: string): { content: string, suggestions?: string[], resources?: any[] } => {
-    const responses = {
-      crisis: {
-        content: "I'm very concerned about what you've shared. Your feelings are valid, but I want you to know that help is available. Please consider reaching out to a crisis counselor immediately. You don't have to go through this alone.",
-        suggestions: ['Talk to crisis counselor', 'Call emergency services', 'Contact trusted friend'],
-        resources: [
-          { title: 'Crisis Text Line', type: 'emergency', action: 'Text HOME to 741741' },
-          { title: 'National Suicide Prevention Lifeline', type: 'emergency', action: 'Call 988' },
-          { title: 'Campus Counseling Center', type: 'emergency', action: 'Call (555) 123-4568' }
-        ]
-      },
-      negative: {
-        content: "I hear that you're going through a difficult time. It's completely normal to have these feelings, and I'm here to support you. Would you like to try a coping technique or talk more about what's bothering you?",
-        suggestions: ['Try breathing exercise', 'Explore feelings', 'Find campus resources'],
-        resources: [
-          { title: '4-7-8 Breathing Technique', type: 'technique', action: 'Practice now' },
-          { title: 'Mindfulness Exercise', type: 'technique', action: 'Start guided session' },
-          { title: 'Counseling Services', type: 'resource', action: 'Learn more' }
-        ]
-      },
-      positive: {
-        content: "It's wonderful to hear that you're feeling good! Positive emotions are just as important to acknowledge. What's contributing to these good feelings? Sharing positive experiences can help reinforce them.",
-        suggestions: ['Share what\'s working', 'Set new goals', 'Help others'],
-        resources: [
-          { title: 'Gratitude Practice', type: 'technique', action: 'Start journaling' },
-          { title: 'Goal Setting', type: 'technique', action: 'Create wellness goals' }
-        ]
-      },
-      neutral: {
-        content: "Thank you for sharing. I'm here to listen and support you in whatever way you need. Would you like to explore how you're feeling in more detail, or is there something specific you'd like to talk about?",
-        suggestions: ['Explore feelings', 'Daily check-in', 'Stress management'],
-        resources: [
-          { title: 'Mood Assessment', type: 'resource', action: 'Take quick assessment' },
-          { title: 'Stress Relief Techniques', type: 'technique', action: 'Browse options' }
-        ]
-      }
-    }
-
-    return responses[sentiment as keyof typeof responses] || responses.neutral
-  }
-
-  const updateConversationContext = (userMessage: string, sentiment: string) => {
-    const topics = conversationContext.topics
-    const messageWords = userMessage.toLowerCase().split(' ')
-    
-    // Extract topics
-    const topicKeywords = ['study', 'exam', 'relationship', 'family', 'sleep', 'anxiety', 'depression', 'stress', 'work']
-    const newTopics = topicKeywords.filter(topic => 
-      messageWords.some(word => word.includes(topic)) && !topics.includes(topic)
-    )
-
-    // Update risk level
-    let riskLevel: 'low' | 'medium' | 'high' = 'low'
-    if (sentiment === 'crisis') riskLevel = 'high'
-    else if (sentiment === 'negative') riskLevel = 'medium'
-
-    setConversationContext(prev => ({
-      ...prev,
-      userMood: sentiment,
-      topics: [...topics, ...newTopics].slice(-5), // Keep last 5 topics
-      riskLevel
-    }))
-  }
-
   const sendMessage = async () => {
     if (!inputMessage.trim()) return
 
     const userMessage: Message = {
       id: Date.now().toString(),
       content: inputMessage,
-      sender: 'user',
-      timestamp: new Date().toISOString()
+      role: 'user',
     }
 
-    setMessages(prev => [...prev, userMessage])
-    setInputMessage('')
-    setIsTyping(true)
+    const newMessages = [...messages, userMessage];
+    setMessages(newMessages);
+    setInputMessage('');
+    setIsTyping(true);
 
-    // Analyze sentiment
-    const { sentiment, confidence } = analyzeSentiment(inputMessage)
-    
-    // Update conversation context
-    updateConversationContext(inputMessage, sentiment)
-
-    // Simulate AI processing time
-    setTimeout(() => {
-      const response = generateResponse(inputMessage, sentiment)
-      
-      const botMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        content: response.content,
-        sender: 'bot',
-        timestamp: new Date().toISOString(),
-        sentiment: sentiment as any,
-        confidence,
-        suggestions: response.suggestions,
-        resources: response.resources
+    try {
+      //
+      // ─── API CALL TO GROQ (using fetch to avoid dependency issues) ──────────────
+      //
+      const apiKey = import.meta.env.VITE_GROQ_API_KEY;
+      if (!apiKey) {
+        // FIX: Added a specific error message for missing API key.
+        throw new Error("VITE_GROQ_API_KEY is not configured in your .env file.");
       }
 
-      setMessages(prev => [...prev, botMessage])
-      setIsTyping(false)
-    }, 1500)
+      const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            messages: [
+                systemPrompt,
+                ...newMessages.map(msg => ({ role: msg.role, content: msg.content }))
+            ],
+            model: "gemma2-9b-it"
+        })
+      });
+      
+      if (!response.ok) {
+        const errorBody = await response.json();
+        console.error("API Error Body:", errorBody);
+        throw new Error(`API request failed with status ${response.status}: ${errorBody.error?.message || 'Unknown error'}`);
+      }
+      
+      const data = await response.json();
+      const botResponse = data.choices[0]?.message?.content || "I'm not sure how to respond to that. Could you please rephrase?";
+
+      const botMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        content: botResponse,
+        role: 'assistant',
+      }
+      setMessages(prevMessages => [...prevMessages, botMessage]);
+
+    } catch (error: any) {
+      console.error("Error fetching response from Groq:", error);
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        // FIX: Display a more informative error message in the chat.
+        content: `I'm sorry, I encountered an error: ${error.message}`,
+        role: 'assistant',
+      };
+      setMessages(prevMessages => [...prevMessages, errorMessage]);
+    } finally {
+      setIsTyping(false);
+    }
   }
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      sendMessage()
-    }
-  }
-
-  const getSentimentColor = (sentiment?: string) => {
-    switch (sentiment) {
-      case 'positive': return 'text-warm-green'
-      case 'negative': return 'text-sunny-orange'
-      case 'crisis': return 'text-mood-red'
-      default: return 'text-calm-blue'
-    }
-  }
-
-  const getSentimentIcon = (sentiment?: string) => {
-    switch (sentiment) {
-      case 'positive': return ThumbsUp
-      case 'negative': return ThumbsDown
-      case 'crisis': return AlertTriangle
-      default: return MessageCircle
-    }
-  }
-
-  const getRiskLevelColor = (level: string) => {
-    switch (level) {
-      case 'high': return 'bg-gradient-to-r from-mood-red/10 to-sunny-orange/10 text-mood-red border-mood-red/30'
-      case 'medium': return 'bg-gradient-to-r from-sunny-orange/10 to-gentle-pink/10 text-sunny-orange border-sunny-orange/30'
-      default: return 'bg-gradient-to-r from-warm-green/10 to-calm-blue/10 text-warm-green border-warm-green/30'
-    }
-  }
-
-  const getSentimentBadgeColor = (sentiment?: string) => {
-    switch (sentiment) {
-      case 'positive': return 'bg-gradient-to-r from-warm-green/10 to-calm-blue/10 text-warm-green border-warm-green/30'
-      case 'negative': return 'bg-gradient-to-r from-sunny-orange/10 to-gentle-pink/10 text-sunny-orange border-sunny-orange/30'
-      case 'crisis': return 'bg-gradient-to-r from-mood-red/10 to-sunny-orange/10 text-mood-red border-mood-red/30'
-      default: return 'bg-gradient-to-r from-calm-blue/10 to-soft-purple/10 text-calm-blue border-calm-blue/30'
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
     }
   }
 
   return (
     <div className="min-h-screen bg-ai-gradient">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="mb-6"
+          className="mb-6 text-center"
         >
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-medium bg-gradient-to-r from-calm-blue to-soft-purple bg-clip-text text-transparent flex items-center gap-2">
-                AI Mental Health Support
-                <Sparkles className="w-6 h-6 text-sunny-orange" />
-              </h1>
-              <p className="text-muted-foreground mt-2">
-                24/7 AI companion with sentiment analysis and crisis detection
-              </p>
-            </div>
-            <div className="flex items-center gap-3">
-              <Badge className={getRiskLevelColor(conversationContext.riskLevel)}>
-                <Shield className="w-3 h-3 mr-1" />
-                Risk: {conversationContext.riskLevel}
-              </Badge>
-              <Badge variant="outline" className="bg-gradient-to-r from-gentle-pink/10 to-sunny-orange/10 border-gentle-pink/30">
-                <Clock className="w-3 h-3 mr-1" />
-                {conversationContext.sessionDuration}m
-              </Badge>
-            </div>
-          </div>
+          <h1 className="text-3xl font-medium bg-gradient-to-r from-calm-blue to-soft-purple bg-clip-text text-transparent flex items-center justify-center gap-2">
+            AI Mental Health Support
+            <Sparkles className="w-6 h-6 text-sunny-orange" />
+          </h1>
+          <p className="text-muted-foreground mt-2">
+            Your confidential and supportive space to talk.
+          </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Main Chat Interface */}
-          <div className="lg:col-span-3">
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6 }}
-            >
-              <Card className="h-[600px] flex flex-col border-0 shadow-lg bg-card/95 backdrop-blur-sm">
-                <CardHeader className="pb-4 bg-gradient-to-r from-calm-blue/5 to-soft-purple/5">
-                  <CardTitle className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-gradient-to-br from-calm-blue/20 to-soft-purple/20">
-                      <Bot className="w-6 h-6 text-calm-blue" />
-                    </div>
-                    AI Companion
-                    <Badge variant="outline" className="ml-auto bg-gradient-to-r from-warm-green/10 to-calm-blue/10 border-warm-green/30 text-warm-green">
-                      <Shield className="w-3 h-3 mr-1" />
-                      Confidential
-                    </Badge>
-                  </CardTitle>
-                </CardHeader>
-                
-                <CardContent className="flex-1 flex flex-col p-0">
-                  {/* Messages */}
-                  <ScrollArea ref={scrollAreaRef} className="flex-1 px-6">
-                    <div className="space-y-4 pb-4">
-                      {messages.map((message) => (
-                        <div key={message.id} className="space-y-3">
-                          <div className={`flex gap-3 ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-                            {message.sender === 'bot' && (
-                              <Avatar className="w-10 h-10 bg-gradient-to-br from-calm-blue to-soft-purple shadow-lg">
-                                <AvatarFallback className="text-white">
-                                  <Bot className="w-5 h-5" />
-                                </AvatarFallback>
-                              </Avatar>
-                            )}
-                            
-                            <div className={`max-w-xs lg:max-w-md ${message.sender === 'user' ? 'order-1' : ''}`}>
-                              <div className={`p-4 rounded-2xl shadow-sm ${
-                                message.sender === 'user' 
-                                  ? 'bg-gradient-to-br from-gentle-pink to-sunny-orange text-white' 
-                                  : 'bg-gradient-to-br from-muted/80 to-muted/60 backdrop-blur-sm'
-                              }`}>
-                                <p className="text-sm leading-relaxed">{message.content}</p>
-                              </div>
-                              
-                              <div className="flex items-center gap-2 mt-2 px-2">
-                                <span className="text-xs text-muted-foreground">
-                                  {new Date(message.timestamp).toLocaleTimeString()}
-                                </span>
-                                {message.sentiment && message.sender === 'user' && (
-                                  <Badge variant="outline" className={`text-xs ${getSentimentBadgeColor(message.sentiment)}`}>
-                                    {(() => {
-                                      const SentimentIcon = getSentimentIcon(message.sentiment)
-                                      return (
-                                        <>
-                                          <SentimentIcon className={`w-3 h-3 mr-1 ${getSentimentColor(message.sentiment)}`} />
-                                          {message.sentiment}
-                                        </>
-                                      )
-                                    })()}
-                                  </Badge>
-                                )}
-                              </div>
-                            </div>
+        {/* Main Chat Interface */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+        >
+          <Card className="h-[70vh] flex flex-col border-0 shadow-2xl bg-card/80 backdrop-blur-sm rounded-2xl">
+            <CardHeader className="pb-4 bg-gradient-to-r from-calm-blue/5 to-soft-purple/5 border-b border-slate-200/80">
+              <CardTitle className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-gradient-to-br from-calm-blue/20 to-soft-purple/20">
+                  <Bot className="w-6 h-6 text-calm-blue" />
+                </div>
+                MindMate
+                <Badge className="ml-auto bg-gradient-to-r from-warm-green/10 to-calm-blue/10 border-warm-green/30 text-warm-green">
+                  <Shield className="w-3 h-3 mr-1" />
+                  Confidential
+                </Badge>
+              </CardTitle>
+            </CardHeader>
+            
+            <CardContent className="flex-1 flex flex-col p-0">
+              {/* Messages */}
+              <ScrollArea ref={scrollAreaRef} className="flex-1 p-6">
+                <div className="space-y-6">
+                  {messages.map((message) => (
+                    <div key={message.id} className={`flex gap-3 items-start ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                      {message.role === 'assistant' && (
+                        <Avatar className="w-10 h-10 bg-gradient-to-br from-calm-blue to-soft-purple shadow-lg">
+                          <AvatarFallback className="text-white bg-transparent">
+                            <Bot className="w-5 h-5" />
+                          </AvatarFallback>
+                        </Avatar>
+                      )}
+                      
+                      <div className={`max-w-md lg:max-w-lg p-4 rounded-2xl shadow-sm break-words ${
+                        message.role === 'user' 
+                          ? 'bg-gradient-to-br from-indigo-500 to-purple-500 text-white rounded-br-lg' 
+                          : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-bl-lg'
+                      }`}>
+                        <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
+                      </div>
 
-                            {message.sender === 'user' && (
-                              <Avatar className="w-10 h-10 bg-gradient-to-br from-soft-purple to-gentle-pink shadow-lg">
-                                <AvatarFallback className="text-white">
-                                  <User className="w-5 h-5" />
-                                </AvatarFallback>
-                              </Avatar>
-                            )}
-                          </div>
-
-                          {/* Bot suggestions and resources */}
-                          {message.sender === 'bot' && (message.suggestions || message.resources) && (
-                            <div className="ml-13 space-y-4">
-                              {message.suggestions && (
-                                <div>
-                                  <p className="text-xs text-muted-foreground mb-2 flex items-center gap-1">
-                                    <Zap className="w-3 h-3" />
-                                    Quick Actions:
-                                  </p>
-                                  <div className="flex flex-wrap gap-2">
-                                    {message.suggestions.map((suggestion, index) => (
-                                      <Button key={index} variant="outline" size="sm" className="h-8 bg-gradient-to-r from-calm-blue/10 to-soft-purple/10 border-calm-blue/30 text-calm-blue hover:from-calm-blue/20 hover:to-soft-purple/20">
-                                        {suggestion}
-                                      </Button>
-                                    ))}
-                                  </div>
-                                </div>
-                              )}
-
-                              {message.resources && (
-                                <div>
-                                  <p className="text-xs text-muted-foreground mb-2 flex items-center gap-1">
-                                    <Lightbulb className="w-3 h-3" />
-                                    Resources:
-                                  </p>
-                                  <div className="space-y-2">
-                                    {message.resources.map((resource, index) => (
-                                      <div 
-                                        key={index} 
-                                        className={`p-3 rounded-lg border-2 text-sm shadow-sm ${
-                                          resource.type === 'emergency' ? 'bg-gradient-to-r from-mood-red/10 to-sunny-orange/10 border-mood-red/30' :
-                                          resource.type === 'technique' ? 'bg-gradient-to-r from-calm-blue/10 to-soft-purple/10 border-calm-blue/30' :
-                                          'bg-gradient-to-r from-warm-green/10 to-calm-blue/10 border-warm-green/30'
-                                        }`}
-                                      >
-                                        <div className="flex items-center justify-between">
-                                          <span className="font-medium">{resource.title}</span>
-                                          <Button variant="link" size="sm" className="h-auto p-0 text-xs text-soft-purple hover:text-soft-purple/80">
-                                            {resource.action} →
-                                          </Button>
-                                        </div>
-                                      </div>
-                                    ))}
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      ))}
-
-                      {/* Typing indicator */}
-                      {isTyping && (
-                        <div className="flex gap-3">
-                          <Avatar className="w-10 h-10 bg-gradient-to-br from-calm-blue to-soft-purple shadow-lg">
-                            <AvatarFallback className="text-white">
-                              <Bot className="w-5 h-5" />
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="bg-gradient-to-br from-muted/80 to-muted/60 p-4 rounded-2xl backdrop-blur-sm">
-                            <div className="flex space-x-1">
-                              <div className="w-2 h-2 bg-soft-purple rounded-full animate-bounce"></div>
-                              <div className="w-2 h-2 bg-soft-purple rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                              <div className="w-2 h-2 bg-soft-purple rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                            </div>
-                          </div>
-                        </div>
+                      {message.role === 'user' && (
+                        <Avatar className="w-10 h-10 bg-gradient-to-br from-soft-purple to-gentle-pink shadow-lg">
+                           <AvatarFallback className="text-white bg-transparent">
+                            <User className="w-5 h-5" />
+                          </AvatarFallback>
+                        </Avatar>
                       )}
                     </div>
-                  </ScrollArea>
+                  ))}
 
-                  <Separator className="bg-gradient-to-r from-transparent via-border to-transparent" />
-
-                  {/* Input */}
-                  <div className="p-6 bg-gradient-to-r from-calm-blue/5 to-soft-purple/5">
-                    <div className="flex gap-3">
-                      <Input
-                        ref={inputRef}
-                        placeholder="Share what's on your mind..."
-                        value={inputMessage}
-                        onChange={(e) => setInputMessage(e.target.value)}
-                        onKeyPress={handleKeyPress}
-                        className="flex-1 h-12 bg-gradient-to-r from-card to-card/80 border-2 border-primary/20 focus:border-primary/50"
-                      />
-                      <Button 
-                        onClick={sendMessage} 
-                        size="sm" 
-                        className="h-12 px-6 bg-gradient-to-r from-gentle-pink to-sunny-orange hover:from-gentle-pink/90 hover:to-sunny-orange/90 text-white shadow-lg"
-                      >
-                        <Send className="w-4 h-4" />
-                      </Button>
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-3 text-center">
-                      This AI provides support but is not a replacement for professional mental health care.
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          </div>
-
-          {/* Sidebar */}
-          <div className="space-y-6">
-            {/* Session Context */}
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6 }}
-            >
-              <Card className="border-0 shadow-lg bg-card/95 backdrop-blur-sm">
-                <CardHeader className="pb-3">
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <div className="p-2 rounded-lg bg-gradient-to-br from-soft-purple/20 to-calm-blue/20">
-                      <Brain className="w-5 h-5 text-soft-purple" />
-                    </div>
-                    Session Context
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-muted/30 to-muted/20">
-                      <span className="text-sm font-medium">Current Mood</span>
-                      <Badge variant="outline" className={getSentimentBadgeColor(conversationContext.userMood)}>
-                        {conversationContext.userMood}
-                      </Badge>
-                    </div>
-                    
-                    <div className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-muted/30 to-muted/20">
-                      <span className="text-sm font-medium">Risk Level</span>
-                      <Badge className={getRiskLevelColor(conversationContext.riskLevel)}>
-                        {conversationContext.riskLevel}
-                      </Badge>
-                    </div>
-
-                    <div className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-muted/30 to-muted/20">
-                      <span className="text-sm font-medium">Session Time</span>
-                      <span className="text-sm font-medium text-calm-blue">
-                        {conversationContext.sessionDuration}min
-                      </span>
-                    </div>
-                  </div>
-
-                  {conversationContext.topics.length > 0 && (
-                    <div className="mt-4 p-4 rounded-lg bg-gradient-to-r from-soft-purple/10 to-gentle-pink/10">
-                      <p className="text-sm font-medium mb-2">Discussion Topics</p>
-                      <div className="flex flex-wrap gap-1">
-                        {conversationContext.topics.map((topic, index) => (
-                          <Badge key={index} variant="secondary" className="text-xs bg-white/70">
-                            {topic}
-                          </Badge>
-                        ))}
+                  {/* Typing indicator */}
+                  {isTyping && (
+                    <div className="flex gap-3 items-start">
+                      <Avatar className="w-10 h-10 bg-gradient-to-br from-calm-blue to-soft-purple shadow-lg">
+                        <AvatarFallback className="text-white bg-transparent">
+                          <Bot className="w-5 h-5" />
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm rounded-bl-lg">
+                        <div className="flex space-x-1">
+                          <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"></div>
+                          <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                          <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                        </div>
                       </div>
                     </div>
                   )}
-                </CardContent>
-              </Card>
-            </motion.div>
+                </div>
+              </ScrollArea>
 
-            {/* Quick Resources */}
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.2, duration: 0.6 }}
-            >
-              <Card className="border-0 shadow-lg bg-card/95 backdrop-blur-sm">
-                <CardHeader className="pb-3">
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <div className="p-2 rounded-lg bg-gradient-to-br from-sunny-orange/20 to-gentle-pink/20">
-                      <Lightbulb className="w-5 h-5 text-sunny-orange" />
-                    </div>
-                    Quick Resources
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <Button variant="outline" size="sm" className="w-full justify-start bg-gradient-to-r from-gentle-pink/10 to-mood-red/5 border-gentle-pink/30 hover:from-gentle-pink/20 hover:to-mood-red/10">
-                    <Heart className="w-4 h-4 mr-2 text-gentle-pink" />
-                    Breathing Exercise
-                  </Button>
-                  <Button variant="outline" size="sm" className="w-full justify-start bg-gradient-to-r from-soft-purple/10 to-calm-blue/5 border-soft-purple/30 hover:from-soft-purple/20 hover:to-calm-blue/10">
-                    <Brain className="w-4 h-4 mr-2 text-soft-purple" />
-                    Mindfulness Guide
-                  </Button>
-                  <Button variant="outline" size="sm" className="w-full justify-start bg-gradient-to-r from-warm-green/10 to-calm-blue/5 border-warm-green/30 hover:from-warm-green/20 hover:to-calm-blue/10">
-                    <MessageCircle className="w-4 h-4 mr-2 text-warm-green" />
-                    Campus Counseling
-                  </Button>
-                  <Button variant="outline" size="sm" className="w-full justify-start bg-gradient-to-r from-mood-red/10 to-sunny-orange/5 border-mood-red/30 hover:from-mood-red/20 hover:to-sunny-orange/10">
-                    <AlertTriangle className="w-4 h-4 mr-2 text-mood-red" />
-                    Crisis Support
-                  </Button>
-                </CardContent>
-              </Card>
-            </motion.div>
+              <Separator className="bg-gradient-to-r from-transparent via-slate-200 dark:via-slate-700 to-transparent" />
 
-            {/* Privacy Notice */}
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.4, duration: 0.6 }}
-            >
-              <Card className="border-0 shadow-lg bg-gradient-to-br from-warm-green/10 to-calm-blue/10 backdrop-blur-sm">
-                <CardContent className="p-6">
-                  <div className="text-center space-y-3">
-                    <div className="p-3 rounded-full bg-gradient-to-br from-warm-green/20 to-calm-blue/20 w-fit mx-auto">
-                      <Shield className="w-6 h-6 text-warm-green" />
-                    </div>
-                    <p className="text-xs text-muted-foreground leading-relaxed">
-                      Your conversations are confidential and encrypted. Data is used only to improve support quality.
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          </div>
-        </div>
+              {/* Input */}
+              <div className="p-4 bg-white/50 dark:bg-slate-800/50">
+                <div className="flex gap-3 items-center">
+                  <Input
+                    placeholder="Share what's on your mind..."
+                    value={inputMessage}
+                    onChange={(e) => setInputMessage(e.target.value)}
+                    onKeyDown={handleKeyPress}
+                    className="flex-1 h-12 bg-white dark:bg-slate-700 border-slate-300 dark:border-slate-600 focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2"
+                    disabled={isTyping}
+                  />
+                  <Button 
+                    onClick={sendMessage} 
+                    size="icon" 
+                    className="h-12 w-12 bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg rounded-full disabled:bg-indigo-400"
+                    disabled={isTyping || !inputMessage.trim()}
+                  >
+                    <Send className="w-5 h-5" />
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+         <p className="text-xs text-slate-500 dark:text-slate-400 mt-4 text-center">
+            This AI provides support but is not a replacement for professional mental health care.
+        </p>
       </div>
     </div>
   )
 }
+

@@ -1,3 +1,5 @@
+// src/App.tsx
+
 import { useState } from 'react';
 import { Auth } from './components/auth';
 import { Navigation } from './components/navigation';
@@ -11,25 +13,23 @@ import { Community } from './components/community';
 import { StudentReports } from './components/student-reports';
 import { AdminReports } from './components/admin-reports';
 import { CrisisSupport } from './components/crisis-support';
-import { useAuth } from './context/AuthContext'; // Import the useAuth hook
+import { Profile } from './components/profile'; // ✨ 1. IMPORT THE PROFILE COMPONENT
+import { useAuth } from './context/AuthContext';
 
 export default function App() {
-  // Get everything needed from the global AuthContext
   const { isAuthenticated, user, role, logout } = useAuth();
   const [activeSection, setActiveSection] = useState('dashboard');
 
   if (!isAuthenticated) {
-    // The onLogin prop is no longer needed as the context handles it
     return <Auth />;
   }
 
   const renderSection = () => {
-    // This rendering logic remains the same
     if (role === 'admin') {
       switch (activeSection) {
         case 'dashboard': return <AdminDashboard onSectionChange={setActiveSection} />;
         case 'reports': return <AdminReports />;
-        // Add other admin sections here as needed
+        case 'profile': return <Profile />; // ✨ 2. ADD PROFILE CASE FOR ADMIN
         default: return <AdminDashboard onSectionChange={setActiveSection} />;
       }
     } else {
@@ -43,6 +43,7 @@ export default function App() {
         case 'community': return <Community />;
         case 'reports': return <StudentReports userData={user} />;
         case 'crisis': return <CrisisSupport />;
+        case 'profile': return <Profile />; // ✨ 2. ADD PROFILE CASE FOR STUDENT
         default: return <Dashboard onSectionChange={setActiveSection} userData={user} />;
       }
     }
@@ -55,7 +56,7 @@ export default function App() {
         onSectionChange={setActiveSection}
         userRole={role || 'student'}
         userData={user}
-        onLogout={logout} // Use the logout function from the context
+        onLogout={logout}
       />
       <div className="pt-24">
         {renderSection()}
@@ -63,4 +64,3 @@ export default function App() {
     </div>
   );
 }
-
