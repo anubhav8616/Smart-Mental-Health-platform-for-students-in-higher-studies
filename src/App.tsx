@@ -13,6 +13,7 @@ import { Community } from './components/community';
 import { StudentReports } from './components/student-reports';
 import { AdminReports } from './components/admin-reports';
 import { CrisisSupport } from './components/crisis-support';
+import { StudentManagement } from './components/student-management';
 import  Profile  from './components/profile';
 import { useAuth } from './context/AuthContext';
 
@@ -28,7 +29,11 @@ export default function App() {
     if (role === 'admin') {
       switch (activeSection) {
         case 'dashboard': return <AdminDashboard onSectionChange={setActiveSection} />;
+        case 'analytics': return <AdminReports />;
+        case 'students': return <StudentManagement />;
         case 'reports': return <AdminReports />;
+        case 'crisis': return <CrisisSupport />;
+        case 'resources': return <Resources />;
         case 'profile': return <Profile />; // ✨ 2. ADD PROFILE CASE FOR ADMIN
         default: return <AdminDashboard onSectionChange={setActiveSection} />;
       }
