@@ -334,7 +334,7 @@ export function PrivacyEthics() {
                     <h3 className="font-medium mb-2 text-red-600 dark:text-red-400">Important Disclaimer</h3>
                     <p className="text-sm text-red-800 dark:text-red-400">
                       This platform is designed to support mental wellness but is not a substitute for professional 
-                      mental health care. In emergencies, always call 911 or your local emergency services.
+                      mental health care. In emergencies, always call 112 or your local emergency services.
                     </p>
                   </div>
                 </div>

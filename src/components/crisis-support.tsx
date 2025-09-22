@@ -15,7 +15,7 @@ const immediateHelp = [
   {
     title: 'National Crisis & Suicide Hotline',
     description: '24/7, free and confidential support.',
-    contact: '7893078930',
+    contact: '9152987821',
     icon: Phone,
     color: 'bg-blue-500 hover:bg-blue-600',
   },
