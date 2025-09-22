@@ -244,7 +244,7 @@ export function ScheduleMeeting({ onClose }: ScheduleMeetingProps) {
                   </div>
                 </div>
               )}
-
+{/* hi */}
               {/* Step 3: Details */}
               {step === 3 && (
                 <div className="space-y-6">
