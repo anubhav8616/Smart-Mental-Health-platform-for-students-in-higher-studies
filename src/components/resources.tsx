@@ -76,7 +76,7 @@ export function Resources() {
       readTime: 6,
       popularity: 156,
       tags: ["motivation", "goals", "purpose"],
-      image: "https://images.unsplash.com/photo-1635373390303-cc78167278ee?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtZW50YWwlMjBoZWFsdGglMjB3ZWxsbmVzcyUyMG1lZGl0YXRpb258ZW58MXx8fHwxNzU3MTMwMzIxfDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
+      image: "https://images.unsplash.com/photo-1635373390303-cc78167278ee?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtZW50YWwlMjBoZWFsdGglMjB3ZWxsbmVzcyUyMG1lZGl0YXRpb258ZW58MXx8fHwxNzU3MTMwMzIxfDA&ixlib.rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
       href: "https://www.verywellmind.com/what-is-intrinsic-motivation-2795385"
     }
   ]
@@ -87,9 +87,8 @@ export function Resources() {
       title: "5-Minute Breathing Exercise for Anxiety",
       duration: "5:32",
       category: "anxiety",
-      thumbnail: "https://images.unsplash.com/photo-1635373390303-cc78167278ee?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtZW50YWwlMjBoZWFsdGglMjB3ZWxsbmVzcyUyMG1lZGl0YXRpb258ZW58MXx8fHwxNzU3MTMwMzIxfDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
+      thumbnail: "https://images.unsplash.com/photo-1635373390303-cc78167278ee?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtZW50YWwlMjBoZWFsdGglMjB3ZWxsbmVzcyUyMG1lZGl0YXRpb258ZW58MXx8fHwxNzU3MTMwMzIxfDA&ixlib.rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
       views: 1205,
-      // FIX: Added video href
       href: "https://www.youtube.com/watch?v=oN8xV3Kb5-Q"
     },
     {
@@ -97,9 +96,8 @@ export function Resources() {
       title: "Progressive Muscle Relaxation",
       duration: "15:45",
       category: "stress",
-      thumbnail: "https://images.unsplash.com/photo-1660128356943-e1f893a56a89?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzdHVkZW50JTIwc3VwcG9ydCUyMGNvdW5zZWxpbmd8ZW58MXx8fHwxNzU3MTc0OTU3fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
+      thumbnail: "https://images.unsplash.com/photo-1660128356943-e1f893a56a89?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzdHVkZW50JTIwc3VwcG9ydCUyMGNvdW5zZWxpbmd8ZW58MXx8fHwxNzU3MTc0OTU3fDA&ixlib.rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
       views: 892,
-      // FIX: Added video href
       href: "https://www.youtube.com/watch?v=SNqYG95j_UQ"
     },
     {
@@ -107,9 +105,8 @@ export function Resources() {
       title: "Sleep Stories for Better Rest",
       duration: "25:12",
       category: "sleep",
-      thumbnail: "https://images.unsplash.com/photo-1620442771341-4e157b3b6cdf?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjb21tdW5pdHklMjBzdXBwb3J0JTIwZ3JvdXB8ZW58MXx8fHwxNzU3MjE3NjQwfDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
+      thumbnail: "https://images.unsplash.com/photo-1620442771341-4e157b3b6cdf?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjb21tdW5pdHklMjBzdXBwb3J0JTIwZ3JvdXB8ZW58MXx8fHwxNzU3MjE3NjQwfDA&ixlib.rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
       views: 2134,
-      // FIX: Added video href
       href: "https://www.youtube.com/watch?v=huTPNDi6WJ8"
     }
   ]
@@ -120,21 +117,24 @@ export function Resources() {
       title: "Mindfulness Meditation for Beginners",
       duration: "10:00",
       category: "stress",
-      plays: 3456
+      plays: 3456,
+      href: "https://www.mindful.org/audio-resources-for-mindfulness-meditation/"
     },
     {
       id: 2,
       title: "Confidence Building Affirmations",
       duration: "8:30",
       category: "motivation",
-      plays: 1892
+      plays: 1892,
+      href: "https://open.spotify.com/track/3U6hlOQqZqbZDXr7XljDf2"
     },
     {
       id: 3,
       title: "Body Scan for Better Sleep",
       duration: "20:15",
       category: "sleep",
-      plays: 2741
+      plays: 2741,
+      href: "https://www.mindful.org/a-body-scan-meditation-to-help-you-sleep/"
     }
   ]
 
@@ -336,7 +336,6 @@ export function Resources() {
                         </Badge>
                         <span>{video.views.toLocaleString()} views</span>
                       </div>
-                      {/* FIX: Added onClick handler and disabled state for the video button */}
                       <Button 
                         className="w-full bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 disabled:opacity-50"
                         onClick={() => {
@@ -382,7 +381,16 @@ export function Resources() {
                           <Button size="sm" variant="outline">
                             <Download className="w-4 h-4" />
                           </Button>
-                          <Button size="sm" className="bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600">
+                          <Button 
+                            size="sm" 
+                            className="bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 disabled:opacity-50"
+                            onClick={() => {
+                              if (audio.href) {
+                                window.open(audio.href, '_blank', 'noopener,noreferrer');
+                              }
+                            }}
+                            disabled={!audio.href}
+                          >
                             <PlayCircle className="w-4 h-4 mr-2" />
                             Play
                           </Button>
