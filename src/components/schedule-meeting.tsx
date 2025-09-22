@@ -1,40 +1,38 @@
-import { useState, useEffect } from 'react';
-import { motion } from 'motion/react';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
-import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Calendar } from './ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
-import { CalendarIcon, Clock, Users, FileText, CheckCircle2 } from 'lucide-react';
+import { Calendar as CalendarIcon, Clock, Users, FileText, CheckCircle2, User, UserCog, ListChecks, Check } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from './ui/utils';
 import { supabase } from '../supabaseClient';
 import { useLanguage } from '../context/LanguageContext';
 import { toast } from 'sonner';
 
+// --- Helper Interfaces ---
 interface ScheduleMeetingProps {
   onClose: () => void;
 }
-
-interface Student {
+interface UserProfile {
   id: string;
   email?: string;
   username?: string;
   name?: string;
 }
 
-interface Counselor {
-  id: string;
-  email?: string;
-  username?: string;
-  name?: string;
-}
-
+// --- Main Component ---
 export function ScheduleMeeting({ onClose }: ScheduleMeetingProps) {
   const { t } = useLanguage();
+
+  // Stepper State
+  const [step, setStep] = useState(1);
+
+  // Form Data State
   const [selectedStudent, setSelectedStudent] = useState<string>('');
   const [selectedCounselor, setSelectedCounselor] = useState<string>('');
   const [selectedDate, setSelectedDate] = useState<Date>();
@@ -42,81 +40,45 @@ export function ScheduleMeeting({ onClose }: ScheduleMeetingProps) {
   const [duration, setDuration] = useState<string>('60');
   const [meetingType, setMeetingType] = useState<string>('');
   const [notes, setNotes] = useState<string>('');
+  
+  // UI & Data Loading State
   const [isLoading, setIsLoading] = useState(false);
-  const [students, setStudents] = useState<Student[]>([]);
-  const [counselors, setCounselors] = useState<Counselor[]>([]);
-  const [confirmation, setConfirmation] = useState<null | {
-    studentEmail: string
-    counselorEmail: string
-    date: string
-    time: string
-    duration: number
-    type: string
-  }>(null)
+  const [allUsers, setAllUsers] = useState<UserProfile[]>([]);
+  const [isSuccess, setIsSuccess] = useState(false);
 
-  // Load students and counselors on component mount
+  // Load users on component mount
   useEffect(() => {
-    loadStudentsAndCounselors();
+    const loadUsers = async () => {
+      try {
+        // FIX: Fetch all profiles without filtering by role, as the 'role' column likely doesn't exist.
+        const { data: profilesData, error: profilesError } = await supabase
+          .from('profiles')
+          .select('id, name, email');
+          
+        if (profilesError) throw profilesError;
+        setAllUsers(profilesData || []);
+
+      } catch (error) {
+        console.error('Error loading users:', error);
+        toast.error('Failed to load user data. Please check your Supabase table and RLS policies.');
+      }
+    };
+    loadUsers();
   }, []);
 
-  const loadStudentsAndCounselors = async () => {
-    try {
-      // Attempt to fetch with role/email columns. Fallback if columns don't exist
-      let studentsData: any[] | null = null;
-      let counselorsData: any[] | null = null;
-
-      try {
-        const res = await supabase
-          .from('profiles')
-          .select('id, email, username, name')
-          .eq('role', 'student');
-        if (res.error && res.error.code === '42703') throw res.error;
-        studentsData = res.data || [];
-      } catch (_) {
-        const res = await supabase
-          .from('profiles')
-          .select('*');
-        studentsData = (res.data || []).slice(0, 100);
-      }
-
-      try {
-        const res = await supabase
-          .from('profiles')
-          .select('id, email, username, name')
-          .in('role', ['admin', 'counselor']);
-        if (res.error && res.error.code === '42703') throw res.error;
-        counselorsData = res.data || [];
-      } catch (_) {
-        const res = await supabase
-          .from('profiles')
-          .select('*');
-        counselorsData = (res.data || []).slice(0, 100);
-      }
-
-      // Map email fallbacks
-      const normalizeEmail = (row: any) => {
-        const value: string | undefined = row?.email || (typeof row?.username === 'string' && row.username.includes('@') ? row.username : undefined);
-        return value;
-      };
-      setStudents((studentsData || []).map(r => ({ id: r.id, email: normalizeEmail(r), username: r.username, name: r.name })));
-      setCounselors((counselorsData || []).map(r => ({ id: r.id, email: normalizeEmail(r), username: r.username, name: r.name })));
-    } catch (error) {
-      console.error('Error loading users:', error);
-      toast.error(t('common.error'));
-    }
-  };
+  // --- Navigation and Submission Logic ---
+  const handleNext = () => setStep((prev) => prev + 1);
+  const handlePrevious = () => setStep((prev) => prev - 1);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!selectedStudent || !selectedCounselor || !selectedDate || !selectedTime || !meetingType) {
-      toast.error(t('meeting.error') || 'Please fill in all required fields');
-      return;
-    }
-
     setIsLoading(true);
 
     try {
+      if (!selectedStudent || !selectedCounselor || !selectedDate || !selectedTime || !meetingType) {
+        throw new Error('All required fields must be filled.');
+      }
+
       const meetingData = {
         student_id: selectedStudent,
         counselor_id: selectedCounselor,
@@ -126,264 +88,223 @@ export function ScheduleMeeting({ onClose }: ScheduleMeetingProps) {
         meeting_type: meetingType,
         notes: notes,
         status: 'scheduled',
-        created_at: new Date().toISOString(),
       };
 
-      const { error } = await supabase
-        .from('meetings')
-        .insert([meetingData]);
-
+      const { error } = await supabase.from('meetings').insert([meetingData]);
       if (error) throw error;
-
-      // Build confirmation details
-      const selectedStudentRow = students.find(s => s.id === selectedStudent)
-      const selectedCounselorRow = counselors.find(c => c.id === selectedCounselor)
-      const studentEmail = selectedStudentRow?.email || (selectedStudentRow?.username && selectedStudentRow.username.includes('@') ? selectedStudentRow.username : '')
-      const counselorEmail = selectedCounselorRow?.email || (selectedCounselorRow?.username && selectedCounselorRow.username.includes('@') ? selectedCounselorRow.username : '')
-      const dateStr = meetingData.meeting_date
-      const timeStr = meetingData.meeting_time
-      const durationNum = meetingData.duration
-      const typeStr = meetingData.meeting_type
-
-      // Send email notifications (best-effort)
-      const subject = `Meeting scheduled on ${dateStr} at ${timeStr}`
-      const html = `
-        <div>
-          <h2>Meeting Scheduled</h2>
-          <p><strong>Date:</strong> ${dateStr}</p>
-          <p><strong>Time:</strong> ${timeStr}</p>
-          <p><strong>Duration:</strong> ${durationNum} minutes</p>
-          <p><strong>Type:</strong> ${typeStr}</p>
-          ${notes ? `<p><strong>Notes:</strong> ${notes}</p>` : ''}
-        </div>
-      `
-      try {
-        if (studentEmail) {
-          fetch('/api/send-email', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ to: studentEmail, subject, html })
-          }).catch(() => {})
-        }
-        if (counselorEmail) {
-          fetch('/api/send-email', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ to: counselorEmail, subject, html })
-          }).catch(() => {})
-        }
-      } catch {}
-
-      setConfirmation({
-        studentEmail,
-        counselorEmail,
-        date: dateStr,
-        time: timeStr,
-        duration: durationNum,
-        type: typeStr,
-      })
-      toast.success(t('meeting.success'));
-    } catch (error) {
+      
+      toast.success('Meeting scheduled successfully!');
+      setIsSuccess(true);
+    } catch (error: any) {
       console.error('Error scheduling meeting:', error);
-      toast.error(t('meeting.error'));
+      toast.error(error.message || 'Failed to schedule meeting.');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const timeSlots = [
-    '09:00', '09:30', '10:00', '10:30', '11:00', '11:30',
-    '12:00', '12:30', '13:00', '13:30', '14:00', '14:30',
-    '15:00', '15:30', '16:00', '16:30', '17:00', '17:30'
+  // --- Data for Rendering ---
+  const steps = [
+    { id: 1, name: 'Participants', icon: Users },
+    { id: 2, name: 'Date & Time', icon: Clock },
+    { id: 3, name: 'Details', icon: ListChecks },
+    { id: 4, name: 'Confirm', icon: Check },
   ];
+
+  const timeSlots = Array.from({ length: 18 }, (_, i) => {
+    const hour = 9 + Math.floor(i / 2);
+    const minute = i % 2 === 0 ? '00' : '30';
+    return `${hour.toString().padStart(2, '0')}:${minute}`;
+  });
+
+  const getUserName = (id: string) => allUsers.find(u => u.id === id)?.name || id;
+
+  // --- Step Validation ---
+  const isStep1Complete = selectedStudent && selectedCounselor;
+  const isStep2Complete = selectedDate && selectedTime;
+  const isStep3Complete = meetingType;
+  
+  // --- Render Logic ---
+  if (isSuccess) {
+    return (
+      <motion.div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <motion.div
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className="bg-background rounded-lg shadow-2xl max-w-md w-full p-8 text-center"
+        >
+          <CheckCircle2 className="w-16 h-16 text-green-500 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold mb-2">Meeting Scheduled!</h2>
+          <p className="text-muted-foreground mb-6">Both participants will be notified shortly.</p>
+          <Button onClick={onClose} className="w-full">Close</Button>
+        </motion.div>
+      </motion.div>
+    );
+  }
 
   return (
     <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
       onClick={onClose}
     >
       <motion.div
-        initial={{ scale: 0.95, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0.95, opacity: 0 }}
-        className="bg-background rounded-lg shadow-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+        initial={{ y: 30, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        exit={{ y: 30, opacity: 0 }}
+        className="bg-background rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
-        <Card className="border-0 shadow-none">
-          <CardHeader className="pb-4">
-            <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-2">
-                <Calendar className="w-5 h-5" />
-                {t('meeting.title')}
-              </CardTitle>
-              <Button variant="ghost" size="icon" onClick={onClose}>
-                ×
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Student Selection */}
-              <div className="space-y-2">
-                <Label htmlFor="student">{t('meeting.student')} *</Label>
-                <Select value={selectedStudent} onValueChange={setSelectedStudent}>
-                  <SelectTrigger>
-                    <SelectValue placeholder={t('meeting.selectStudent')} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {students.map((student) => (
-                      <SelectItem key={`student-${student.id}`} value={student.id}>
-                        {student.name || student.email}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Counselor Selection */}
-              <div className="space-y-2">
-                <Label htmlFor="counselor">{t('meeting.counselor')} *</Label>
-                <Select value={selectedCounselor} onValueChange={setSelectedCounselor}>
-                  <SelectTrigger>
-                    <SelectValue placeholder={t('meeting.selectCounselor')} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {counselors.map((counselor) => (
-                      <SelectItem key={`counselor-${counselor.id}`} value={counselor.id}>
-                        {counselor.name || counselor.email}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Date and Time */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>{t('meeting.date')} *</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          "w-full justify-start text-left font-normal",
-                          !selectedDate && "text-muted-foreground"
-                        )}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {selectedDate ? format(selectedDate, "PPP") : <span>{t('meeting.date') || 'Pick a date'}</span>}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0">
-                      <Calendar
-                        mode="single"
-                        selected={selectedDate}
-                        onSelect={setSelectedDate}
-                        initialFocus
-                        disabled={(date) => date < new Date()}
-                      />
-                    </PopoverContent>
-                  </Popover>
+        <CardHeader className="flex-shrink-0">
+          <CardTitle className="flex items-center justify-between">
+            <span>Schedule a New Meeting</span>
+            <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full w-8 h-8">×</Button>
+          </CardTitle>
+          {/* Stepper */}
+          <div className="flex items-center gap-2 sm:gap-4 pt-4">
+            {steps.map((s, index) => (
+              <React.Fragment key={s.id}>
+                <div className="flex flex-col items-center gap-2">
+                  <div
+                    className={cn(
+                      'w-8 h-8 rounded-full flex items-center justify-center transition-all',
+                      step > s.id ? 'bg-green-500 text-white' : '',
+                      step === s.id ? 'bg-primary text-primary-foreground' : '',
+                      step < s.id ? 'bg-muted border' : ''
+                    )}
+                  >
+                    {step > s.id ? <Check className="w-5 h-5" /> : <s.icon className="w-5 h-5" />}
+                  </div>
+                  <p className={cn(
+                    'text-xs text-center',
+                    step >= s.id ? 'font-semibold text-foreground' : 'text-muted-foreground'
+                  )}>{s.name}</p>
                 </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="time">{t('meeting.time')} *</Label>
-                  <Select value={selectedTime} onValueChange={setSelectedTime}>
-                    <SelectTrigger>
-                      <SelectValue placeholder={t('meeting.time') || 'Select time'} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {timeSlots.map((time) => (
-                        <SelectItem key={time} value={time}>
-                          {time}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              {/* Duration and Type */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="duration">{t('meeting.duration')} (minutes)</Label>
-                  <Select value={duration} onValueChange={setDuration}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="30">30 {t('meeting.duration') || 'minutes'}</SelectItem>
-                      <SelectItem value="60">60 {t('meeting.duration') || 'minutes'}</SelectItem>
-                      <SelectItem value="90">90 {t('meeting.duration') || 'minutes'}</SelectItem>
-                      <SelectItem value="120">120 {t('meeting.duration') || 'minutes'}</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="type">{t('meeting.type')} *</Label>
-                  <Select value={meetingType} onValueChange={setMeetingType}>
-                    <SelectTrigger>
-                      <SelectValue placeholder={t('meeting.selectType')} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="counseling">{t('meetingType.counseling')}</SelectItem>
-                      <SelectItem value="crisis">{t('meetingType.crisis')}</SelectItem>
-                      <SelectItem value="followup">{t('meetingType.followup')}</SelectItem>
-                      <SelectItem value="assessment">{t('meetingType.assessment')}</SelectItem>
-                      <SelectItem value="group">{t('meetingType.group')}</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              {/* Notes */}
-              <div className="space-y-2">
-                <Label htmlFor="notes">{t('meeting.notes')}</Label>
-                <Textarea
-                  id="notes"
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  placeholder={t('meeting.notes')}
-                  rows={3}
-                />
-              </div>
-
-              {/* Actions */}
-              <div className="flex justify-end gap-3 pt-4">
-                <Button type="button" variant="outline" onClick={onClose}>
-                  {t('meeting.cancel')}
-                </Button>
-                <Button type="submit" disabled={isLoading || !selectedStudent || !selectedCounselor || !selectedDate || !selectedTime || !meetingType}>
-                  {isLoading ? t('common.loading') : t('meeting.schedule')}
-                </Button>
-              </div>
-            </form>
-
-            {/* Confirmation */}
-            {confirmation && (
-              <div className="mt-6 p-4 rounded-lg border bg-muted/30">
-                <div className="flex items-start gap-3">
-                  <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5" />
-                  <div className="space-y-1 text-sm">
-                    <div className="font-medium">Meeting Confirmed</div>
-                    <div>Date: {confirmation.date}</div>
-                    <div>Time: {confirmation.time}</div>
-                    <div>Duration: {confirmation.duration} minutes</div>
-                    <div>Type: {confirmation.type}</div>
-                    <div className="text-muted-foreground">Emails sent to: {confirmation.studentEmail}{confirmation.counselorEmail ? `, ${confirmation.counselorEmail}` : ''}</div>
+                {index < steps.length - 1 && (
+                  <div className={cn(
+                    'flex-1 h-0.5 mt-[-1rem]',
+                    step > s.id + 1 ? 'bg-green-500' : 'bg-border'
+                  )}></div>
+                )}
+              </React.Fragment>
+            ))}
+          </div>
+        </CardHeader>
+        
+        <CardContent className="flex-1 overflow-y-auto p-6">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={step}
+              initial={{ x: 30, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: -30, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              {/* Step 1: Participants */}
+              {step === 1 && (
+                <div className="space-y-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="student" className="flex items-center gap-2 text-base"><User /> Student *</Label>
+                    <Select value={selectedStudent} onValueChange={setSelectedStudent}>
+                      <SelectTrigger><SelectValue placeholder="Select a student" /></SelectTrigger>
+                      <SelectContent>{allUsers.map(s => <SelectItem key={s.id} value={s.id}>{s.name || s.email}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="counselor" className="flex items-center gap-2 text-base"><UserCog /> Counselor *</Label>
+                    <Select value={selectedCounselor} onValueChange={setSelectedCounselor}>
+                      <SelectTrigger><SelectValue placeholder="Select a counselor" /></SelectTrigger>
+                      <SelectContent>{allUsers.map(c => <SelectItem key={c.id} value={c.id}>{c.name || c.email}</SelectItem>)}</SelectContent>
+                    </Select>
                   </div>
                 </div>
-                <div className="flex justify-end mt-4">
-                  <Button onClick={onClose}>{t('common.close')}</Button>
+              )}
+
+              {/* Step 2: Date & Time */}
+              {step === 2 && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="flex flex-col items-center">
+                    <Label className="mb-2">Select a Date *</Label>
+                    <Calendar
+                      mode="single"
+                      selected={selectedDate}
+                      onSelect={setSelectedDate}
+                      className="rounded-md border"
+                      disabled={(date) => date < new Date(new Date().setHours(0,0,0,0))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Select a Time Slot *</Label>
+                    <div className="grid grid-cols-3 gap-2 max-h-64 overflow-y-auto pr-2">
+                      {timeSlots.map(time => (
+                        <Button key={time} variant={selectedTime === time ? 'default' : 'outline'} onClick={() => setSelectedTime(time)}>
+                          {time}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+              )}
+
+              {/* Step 3: Details */}
+              {step === 3 && (
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="type">Meeting Type *</Label>
+                      <Select value={meetingType} onValueChange={setMeetingType}>
+                        <SelectTrigger><SelectValue placeholder="Select a type" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="counseling">Counseling</SelectItem>
+                          <SelectItem value="crisis">Crisis Intervention</SelectItem>
+                          <SelectItem value="followup">Follow-up</SelectItem>
+                          <SelectItem value="assessment">Assessment Review</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="duration">Duration (minutes)</Label>
+                      <Select value={duration} onValueChange={setDuration}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="30">30 minutes</SelectItem>
+                          <SelectItem value="60">60 minutes</SelectItem>
+                          <SelectItem value="90">90 minutes</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="notes">Additional Notes</Label>
+                    <Textarea id="notes" value={notes} onChange={(e) => setNotes(e.e.target.value)} placeholder="Add any relevant notes for the counselor..." />
+                  </div>
+                </div>
+              )}
+
+              {/* Step 4: Confirmation */}
+              {step === 4 && (
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Please confirm the details:</h3>
+                  <div className="p-4 border rounded-lg space-y-2 bg-muted/50">
+                    <p><strong>Student:</strong> {getUserName(selectedStudent)}</p>
+                    <p><strong>Counselor:</strong> {getUserName(selectedCounselor)}</p>
+                    <p><strong>Date:</strong> {selectedDate ? format(selectedDate, "PPP") : 'Not set'}</p>
+                    <p><strong>Time:</strong> {selectedTime}</p>
+                    <p><strong>Type:</strong> {meetingType}</p>
+                    <p><strong>Duration:</strong> {duration} minutes</p>
+                    {notes && <p><strong>Notes:</strong> {notes}</p>}
+                  </div>
+                </div>
+              )}
+            </motion.div>
+          </AnimatePresence>
+        </CardContent>
+
+        {/* Navigation Buttons */}
+        <div className="flex justify-between p-6 border-t flex-shrink-0">
+          <Button variant="outline" onClick={handlePrevious} disabled={step === 1}>Previous</Button>
+          {step < 4 && <Button onClick={handleNext} disabled={ (step === 1 && !isStep1Complete) || (step === 2 && !isStep2Complete) || (step === 3 && !isStep3Complete) }>Next</Button>}
+          {step === 4 && <Button onClick={handleSubmit} disabled={isLoading}>{isLoading ? 'Scheduling...' : 'Confirm & Schedule'}</Button>}
+        </div>
       </motion.div>
     </motion.div>
   );
