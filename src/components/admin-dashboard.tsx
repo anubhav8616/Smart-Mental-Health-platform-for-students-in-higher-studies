@@ -13,17 +13,23 @@ import {
   Activity,
   CheckCircle
 } from 'lucide-react'
+import { useState } from 'react'
+import { ScheduleMeeting } from './schedule-meeting'
+import { useLanguage } from '../context/LanguageContext'
 
 interface AdminDashboardProps {
   onSectionChange: (section: string) => void
 }
 
 export function AdminDashboard({ onSectionChange }: AdminDashboardProps) {
+  const { t } = useLanguage()
+  const [showScheduleMeeting, setShowScheduleMeeting] = useState(false)
+  
   const stats = [
-    { title: 'Active Students', value: '2,847', change: '+12%', icon: Users, color: 'text-blue-600 dark:text-blue-400' },
-    { title: 'Crisis Alerts', value: '3', change: 'This week', icon: AlertTriangle, color: 'text-red-600 dark:text-red-400' },
-    { title: 'Counseling Sessions', value: '156', change: 'This month', icon: Calendar, color: 'text-green-600 dark:text-green-400' },
-    { title: 'Avg. Mood Score', value: '7.2/10', change: '+0.3', icon: TrendingUp, color: 'text-purple-600 dark:text-purple-400' },
+    { title: t('admin.activeStudents'), value: '2,847', change: '+12%', icon: Users, color: 'text-blue-600 dark:text-blue-400' },
+    { title: t('admin.crisisAlerts'), value: '3', change: 'This week', icon: AlertTriangle, color: 'text-red-600 dark:text-red-400' },
+    { title: t('admin.counselingSessions'), value: '156', change: 'This month', icon: Calendar, color: 'text-green-600 dark:text-green-400' },
+    { title: t('admin.avgMoodScore'), value: '7.2/10', change: '+0.3', icon: TrendingUp, color: 'text-purple-600 dark:text-purple-400' },
   ]
 
   const alerts = [
@@ -52,20 +58,24 @@ export function AdminDashboard({ onSectionChange }: AdminDashboardProps) {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-xl font-medium text-foreground">
-                Administrative Dashboard
+                {t('admin.title')}
               </h1>
               <p className="text-muted-foreground text-sm mt-1">
-                Monitor student mental health and system performance
+                {t('admin.subtitle')}
               </p>
             </div>
             <div className="flex items-center gap-3">
               <Badge variant="outline" className="border-green-600/20 bg-green-600/10 text-green-600 dark:text-green-400">
                 <Shield className="w-3 h-3 mr-1" />
-                System Healthy
+                {t('admin.systemHealthy')}
               </Badge>
-              <Button variant="outline" size="sm">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => setShowScheduleMeeting(true)}
+              >
                 <Calendar className="w-4 h-4 mr-2" />
-                Schedule Meeting
+                {t('admin.scheduleMeeting')}
               </Button>
             </div>
           </div>
@@ -107,7 +117,7 @@ export function AdminDashboard({ onSectionChange }: AdminDashboardProps) {
             >
               <Card className="border shadow-sm">
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-base">Quick Actions</CardTitle>
+                  <CardTitle className="text-base">{t('admin.quickActions')}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -117,7 +127,7 @@ export function AdminDashboard({ onSectionChange }: AdminDashboardProps) {
                       onClick={() => onSectionChange('analytics')}
                     >
                       <BarChart3 className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                      <span className="text-xs">Analytics</span>
+                      <span className="text-xs">{t('nav.analytics')}</span>
                     </Button>
                     <Button 
                       variant="outline" 
@@ -125,7 +135,7 @@ export function AdminDashboard({ onSectionChange }: AdminDashboardProps) {
                       onClick={() => onSectionChange('crisis')}
                     >
                       <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400" />
-                      <span className="text-xs">Crisis Management</span>
+                      <span className="text-xs">{t('nav.crisis')}</span>
                     </Button>
                     <Button 
                       variant="outline" 
@@ -133,7 +143,7 @@ export function AdminDashboard({ onSectionChange }: AdminDashboardProps) {
                       onClick={() => onSectionChange('students')}
                     >
                       <Users className="w-5 h-5 text-green-600 dark:text-green-400" />
-                      <span className="text-xs">Student Overview</span>
+                      <span className="text-xs">{t('nav.students')}</span>
                     </Button>
                   </div>
                 </CardContent>
@@ -150,7 +160,7 @@ export function AdminDashboard({ onSectionChange }: AdminDashboardProps) {
                 <CardHeader className="pb-3">
                   <CardTitle className="flex items-center gap-2 text-base">
                     <Activity className="w-4 h-4" />
-                    Recent Activity
+                    {t('admin.recentActivity')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -186,7 +196,7 @@ export function AdminDashboard({ onSectionChange }: AdminDashboardProps) {
                 <CardHeader className="pb-3">
                   <CardTitle className="flex items-center gap-2 text-base">
                     <AlertTriangle className="w-4 h-4" />
-                    System Alerts
+                    {t('admin.systemAlerts')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -221,7 +231,7 @@ export function AdminDashboard({ onSectionChange }: AdminDashboardProps) {
                 <CardHeader className="pb-3">
                   <CardTitle className="flex items-center gap-2 text-base">
                     <Users className="w-4 h-4" />
-                    Staff on Duty
+                    {t('admin.staffOnDuty')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -270,7 +280,7 @@ export function AdminDashboard({ onSectionChange }: AdminDashboardProps) {
                     <CheckCircle className="w-8 h-8 mx-auto text-primary" />
                     <div>
                       <p className="text-lg font-medium">94.2%</p>
-                      <p className="text-sm text-muted-foreground">System Uptime</p>
+                      <p className="text-sm text-muted-foreground">{t('admin.systemUptime')}</p>
                     </div>
                     <p className="text-xs text-muted-foreground">
                       Last 30 days
@@ -282,6 +292,11 @@ export function AdminDashboard({ onSectionChange }: AdminDashboardProps) {
           </div>
         </div>
       </div>
+      
+      {/* Schedule Meeting Modal */}
+      {showScheduleMeeting && (
+        <ScheduleMeeting onClose={() => setShowScheduleMeeting(false)} />
+      )}
     </div>
   )
 }

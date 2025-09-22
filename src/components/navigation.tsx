@@ -18,9 +18,12 @@ import {
   Menu,
   X,
   FileText,
-  User as UserIcon // Renamed to avoid conflict
+  User as UserIcon, // Renamed to avoid conflict
+  Globe
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { useLanguage } from '../context/LanguageContext';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 
 interface NavigationProps {
   activeSection: string;
@@ -31,6 +34,7 @@ interface NavigationProps {
 }
 
 export function Navigation({ activeSection, onSectionChange, userRole, userData, onLogout }: NavigationProps) {
+  const { language, setLanguage, t } = useLanguage();
   const [isDark, setIsDark] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [username, setUsername] = useState('');
@@ -46,24 +50,24 @@ export function Navigation({ activeSection, onSectionChange, userRole, userData,
 
 
   const studentNavItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: Home },
-    { id: 'mood', label: 'Mood', icon: Heart },
-    { id: 'chatbot', label: 'AI Chat', icon: Bot },
-    { id: 'resources', label: 'Resources', icon: BookOpen },
-    { id: 'community', label: 'Community', icon: Users },
-    { id: 'reports', label: 'Reports', icon: FileText },
-    { id: 'crisis', label: 'Crisis', icon: AlertTriangle },
-    { id: 'profile', label: 'Profile', icon: UserIcon }, // Added Profile
+    { id: 'dashboard', label: t('nav.dashboard'), icon: Home },
+    { id: 'mood', label: t('nav.mood'), icon: Heart },
+    { id: 'chatbot', label: t('nav.chatbot'), icon: Bot },
+    { id: 'resources', label: t('nav.resources'), icon: BookOpen },
+    { id: 'community', label: t('nav.community'), icon: Users },
+    { id: 'reports', label: t('nav.reports'), icon: FileText },
+    { id: 'crisis', label: t('nav.crisis'), icon: AlertTriangle },
+    { id: 'profile', label: t('nav.profile'), icon: UserIcon },
   ];
 
   const adminNavItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: Home },
-    { id: 'analytics', label: 'Analytics', icon: BarChart3 },
-    { id: 'students', label: 'Students', icon: Users },
-    { id: 'reports', label: 'Reports', icon: FileText },
-    { id: 'crisis', label: 'Crisis', icon: AlertTriangle },
-    { id: 'resources', label: 'Resources', icon: BookOpen },
-    { id: 'profile', label: 'Profile', icon: UserIcon }, // Added Profile
+    { id: 'dashboard', label: t('nav.dashboard'), icon: Home },
+    { id: 'analytics', label: t('nav.analytics'), icon: BarChart3 },
+    { id: 'students', label: t('nav.students'), icon: Users },
+    { id: 'reports', label: t('nav.reports'), icon: FileText },
+    { id: 'crisis', label: t('nav.crisis'), icon: AlertTriangle },
+    { id: 'resources', label: t('nav.resources'), icon: BookOpen },
+    { id: 'profile', label: t('nav.profile'), icon: UserIcon },
   ];
 
   const navItems = userRole === 'admin' ? adminNavItems : studentNavItems;
@@ -107,6 +111,21 @@ export function Navigation({ activeSection, onSectionChange, userRole, userData,
             </nav>
           </div>
           <div className="flex items-center gap-2">
+            {/* Language Selector */}
+            <Select value={language} onValueChange={(value) => setLanguage(value as any)}>
+              <SelectTrigger className="w-20 h-8">
+                <Globe className="w-3 h-3 mr-1" />
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="en">EN</SelectItem>
+                <SelectItem value="hi">हि</SelectItem>
+                <SelectItem value="de">DE</SelectItem>
+                <SelectItem value="es">ES</SelectItem>
+                <SelectItem value="ks">ک</SelectItem>
+              </SelectContent>
+            </Select>
+            
             <Button variant="ghost" size="icon" onClick={toggleTheme}>
               {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             </Button>
@@ -164,7 +183,7 @@ export function Navigation({ activeSection, onSectionChange, userRole, userData,
                       ))}
                   </nav>
                   <div className="absolute bottom-6 left-6 right-6">
-                      <Button variant="outline" onClick={onLogout} className="w-full justify-start h-12"><LogOut className="w-5 h-5 mr-3" />Sign Out</Button>
+                      <Button variant="outline" onClick={onLogout} className="w-full justify-start h-12"><LogOut className="w-5 h-5 mr-3" />{t('nav.signOut')}</Button>
                   </div>
                 </div>
               </motion.div>

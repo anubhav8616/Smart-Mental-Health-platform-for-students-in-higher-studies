@@ -1,6 +1,6 @@
 // src/App.tsx
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Auth } from './components/auth';
 import { Navigation } from './components/navigation';
 import { Dashboard } from './components/dashboard';
@@ -59,7 +59,7 @@ export default function App() {
       <Navigation
         activeSection={activeSection}
         onSectionChange={setActiveSection}
-        userRole={role || 'student'}
+        userRole={(role as 'admin' | 'student') || 'student'}
         userData={user}
         onLogout={logout}
       />
