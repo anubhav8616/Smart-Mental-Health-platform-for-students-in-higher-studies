@@ -8,14 +8,14 @@ const immediateHelp = [
   {
     title: 'Emergency Services',
     description: 'For immediate danger to yourself or others.',
-    contact: '911',
+    contact: '112',
     icon: Phone,
     color: 'bg-red-500 hover:bg-red-600',
   },
   {
     title: 'National Crisis & Suicide Hotline',
     description: '24/7, free and confidential support.',
-    contact: '988',
+    contact: '9152987821',
     icon: Phone,
     color: 'bg-blue-500 hover:bg-blue-600',
   },

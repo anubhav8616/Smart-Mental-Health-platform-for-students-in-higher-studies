@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useLanguage } from '../context/LanguageContext';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
@@ -80,12 +81,13 @@ const getStatusBadgeColor = (status: string) => {
 // --- SUB-COMPONENTS for each TAB ---
 
 function OverviewTab() {
+  const { t } = useLanguage();
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <Card>
         <CardHeader>
-          <CardTitle>Monthly Trends</CardTitle>
-          <CardDescription>New cases, resolved cases, and active students</CardDescription>
+          <CardTitle>{t('reports.monthlyTrends') || 'Monthly Trends'}</CardTitle>
+          <CardDescription>{t('reports.trendsDesc') || 'New cases, resolved cases, and active students'}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="h-[300px] w-full">
@@ -105,8 +107,8 @@ function OverviewTab() {
       </Card>
       <Card>
         <CardHeader>
-          <CardTitle>Risk Level Distribution</CardTitle>
-          <CardDescription>Current risk assessment of all students</CardDescription>
+          <CardTitle>{t('reports.riskDistribution') || 'Risk Level Distribution'}</CardTitle>
+          <CardDescription>{t('reports.riskDesc') || 'Current risk assessment of all students'}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="h-[300px] w-full">
@@ -126,6 +128,7 @@ function OverviewTab() {
 }
 
 function StudentRecordsTab() {
+  const { t } = useLanguage();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterDepartment, setFilterDepartment] = useState('all');
@@ -142,28 +145,28 @@ function StudentRecordsTab() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Student Medical Records</CardTitle>
-        <CardDescription>Comprehensive view of all student mental health records</CardDescription>
+        <CardTitle>{t('reports.recordsTitle') || 'Student Medical Records'}</CardTitle>
+        <CardDescription>{t('reports.recordsDesc') || 'Comprehensive view of all student mental health records'}</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="flex flex-col md:flex-row gap-4 mb-6">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input placeholder="Search by name, ID, or department..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10" />
+            <Input placeholder={t('reports.searchPlaceholder') || 'Search by name, ID, or department...'} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10" />
           </div>
           <Select value={filterStatus} onValueChange={setFilterStatus}>
             <SelectTrigger className="w-full md:w-[150px]"><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="Active">Active</SelectItem>
-              <SelectItem value="Monitoring">Monitoring</SelectItem>
-              <SelectItem value="Critical">Critical</SelectItem>
+              <SelectItem value="all">{t('common.allStatus') || 'All Status'}</SelectItem>
+              <SelectItem value="Active">{t('common.active') || 'Active'}</SelectItem>
+              <SelectItem value="Monitoring">{t('common.monitoring') || 'Monitoring'}</SelectItem>
+              <SelectItem value="Critical">{t('common.critical') || 'Critical'}</SelectItem>
             </SelectContent>
           </Select>
           <Select value={filterDepartment} onValueChange={setFilterDepartment}>
-            <SelectTrigger className="w-full md:w-[180px]"><SelectValue placeholder="Department" /></SelectTrigger>
+            <SelectTrigger className="w-full md:w-[180px]"><SelectValue placeholder={t('reports.department') || 'Department'} /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Departments</SelectItem>
+              <SelectItem value="all">{t('reports.allDepartments') || 'All Departments'}</SelectItem>
               {[...new Set(studentRecords.map(r => r.department))].map(dep => <SelectItem key={dep} value={dep}>{dep}</SelectItem>)}
             </SelectContent>
           </Select>
@@ -172,13 +175,13 @@ function StudentRecordsTab() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Student</TableHead>
-                <TableHead>Condition</TableHead>
-                <TableHead>Risk Level</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Recent Mood</TableHead>
-                <TableHead>Next Appointment</TableHead>
-                <TableHead>Actions</TableHead>
+                <TableHead>{t('common.student') || 'Student'}</TableHead>
+                <TableHead>{t('reports.condition') || 'Condition'}</TableHead>
+                <TableHead>{t('reports.riskLevel') || 'Risk Level'}</TableHead>
+                <TableHead>{t('common.status') || 'Status'}</TableHead>
+                <TableHead>{t('reports.recentMood') || 'Recent Mood'}</TableHead>
+                <TableHead>{t('reports.nextAppointment') || 'Next Appointment'}</TableHead>
+                <TableHead>{t('common.actions') || 'Actions'}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -210,11 +213,12 @@ function StudentRecordsTab() {
 }
 
 function DepartmentsTab() {
+  const { t } = useLanguage();
   return(
     <Card>
         <CardHeader>
-          <CardTitle>Departmental Analytics</CardTitle>
-          <CardDescription>Mental health metrics broken down by academic department</CardDescription>
+          <CardTitle>{t('reports.departmentsTitle') || 'Departmental Analytics'}</CardTitle>
+          <CardDescription>{t('reports.departmentsDesc') || 'Mental health metrics broken down by academic department'}</CardDescription>
         </CardHeader>
         <CardContent>
             <div className="h-[400px]">
@@ -224,8 +228,8 @@ function DepartmentsTab() {
                         <XAxis type="number" />
                         <YAxis type="category" dataKey="department" width={120} />
                         <Tooltip />
-                        <Bar dataKey="avgMood" fill="#8884d8" name="Average Mood" />
-                        <Bar dataKey="students" fill="#82ca9d" name="Total Students" />
+                        <Bar dataKey="avgMood" fill="#8884d8" name={t('reports.avgMood') || 'Average Mood'} />
+                        <Bar dataKey="students" fill="#82ca9d" name={t('reports.totalStudents') || 'Total Students'} />
                     </BarChart>
                 </ResponsiveContainer>
             </div>
@@ -234,10 +238,10 @@ function DepartmentsTab() {
   );
 }
 
-
 // --- MAIN ADMIN REPORTS COMPONENT ---
 
 export function AdminReports() {
+  const { t } = useLanguage();
   const [selectedTimeframe, setSelectedTimeframe] = useState('month');
 
   return (
@@ -247,19 +251,19 @@ export function AdminReports() {
           {/* Header */}
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8">
             <div>
-              <h1 className="text-3xl font-bold text-slate-800 dark:text-slate-200">Student Health Reports</h1>
-              <p className="text-muted-foreground">Comprehensive medical records and mental health analytics</p>
+              <h1 className="text-3xl font-bold text-slate-800 dark:text-slate-200">{t('reports.admin.title') || 'Student Health Reports'}</h1>
+              <p className="text-muted-foreground">{t('reports.admin.subtitle') || 'Comprehensive medical records and mental health analytics'}</p>
             </div>
             <div className="flex items-center gap-3 mt-4 lg:mt-0">
               <Select value={selectedTimeframe} onValueChange={setSelectedTimeframe}>
                 <SelectTrigger className="w-[140px]"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="week">This Week</SelectItem>
-                  <SelectItem value="month">This Month</SelectItem>
-                  <SelectItem value="year">This Year</SelectItem>
+                  <SelectItem value="week">{t('common.thisWeek') || 'This Week'}</SelectItem>
+                  <SelectItem value="month">{t('common.thisMonth') || 'This Month'}</SelectItem>
+                  <SelectItem value="year">{t('common.thisYear') || 'This Year'}</SelectItem>
                 </SelectContent>
               </Select>
-              <Button variant="outline" size="sm"><Download className="w-4 h-4 mr-2" /> Export Report</Button>
+              <Button variant="outline" size="sm"><Download className="w-4 h-4 mr-2" /> {t('common.export') || 'Export Report'}</Button>
             </div>
           </div>
 
@@ -267,24 +271,24 @@ export function AdminReports() {
           <Alert className="mb-6 border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950">
             <AlertTriangle className="h-4 w-4 text-red-600" />
             <AlertDescription className="text-red-800 dark:text-red-300">
-              <strong>{overallStats.criticalCases} students</strong> require immediate attention.
+              <strong>{overallStats.criticalCases} {t('reports.students') || 'students'}</strong> {t('reports.immediateAttention') || 'require immediate attention.'}
             </AlertDescription>
           </Alert>
 
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-              <Card><CardContent className="p-6"><p className="text-sm text-muted-foreground">Total Students</p><p className="text-2xl font-bold">{overallStats.totalStudents}</p></CardContent></Card>
-              <Card><CardContent className="p-6"><p className="text-sm text-muted-foreground">Active Cases</p><p className="text-2xl font-bold">{overallStats.activeStudents}</p></CardContent></Card>
-              <Card><CardContent className="p-6"><p className="text-sm text-muted-foreground">Critical Cases</p><p className="text-2xl font-bold text-red-600">{overallStats.criticalCases}</p></CardContent></Card>
-              <Card><CardContent className="p-6"><p className="text-sm text-muted-foreground">Avg Mood Score</p><p className="text-2xl font-bold">{overallStats.avgMoodScore}</p></CardContent></Card>
+              <Card><CardContent className="p-6"><p className="text-sm text-muted-foreground">{t('reports.totalStudents') || 'Total Students'}</p><p className="text-2xl font-bold">{overallStats.totalStudents}</p></CardContent></Card>
+              <Card><CardContent className="p-6"><p className="text-sm text-muted-foreground">{t('reports.activeCases') || 'Active Cases'}</p><p className="text-2xl font-bold">{overallStats.activeStudents}</p></CardContent></Card>
+              <Card><CardContent className="p-6"><p className="text-sm text-muted-foreground">{t('reports.criticalCases') || 'Critical Cases'}</p><p className="text-2xl font-bold text-red-600">{overallStats.criticalCases}</p></CardContent></Card>
+              <Card><CardContent className="p-6"><p className="text-sm text-muted-foreground">{t('reports.avgMoodScore') || 'Avg Mood Score'}</p><p className="text-2xl font-bold">{overallStats.avgMoodScore}</p></CardContent></Card>
           </div>
 
           {/* Tabs */}
           <Tabs defaultValue="overview" className="w-full">
             <TabsList className="grid w-full grid-cols-3 lg:w-[400px]">
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="records">Student Records</TabsTrigger>
-              <TabsTrigger value="departments">Departments</TabsTrigger>
+              <TabsTrigger value="overview">{t('reports.tab.overview') || 'Overview'}</TabsTrigger>
+              <TabsTrigger value="records">{t('reports.tab.records') || 'Student Records'}</TabsTrigger>
+              <TabsTrigger value="departments">{t('reports.tab.departments') || 'Departments'}</TabsTrigger>
             </TabsList>
             <TabsContent value="overview" className="space-y-6 mt-6"><OverviewTab /></TabsContent>
             <TabsContent value="records" className="space-y-6 mt-6"><StudentRecordsTab /></TabsContent>

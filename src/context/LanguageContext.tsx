@@ -13,6 +13,24 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 // Translation keys
 const translations = {
   en: {
+    // Students management
+    'students.title': 'Student Management',
+    'students.subtitle': 'Manage and monitor student accounts',
+    'students.search': 'Search students...',
+    'students.active30': 'Active (30 days)',
+    'students.admins': 'Admins',
+    // Common
+    'common.all': 'All',
+    'common.show': 'Show',
+    'common.hide': 'Hide',
+    'common.export': 'Export',
+    'common.student': 'Student',
+    'common.status': 'Status',
+    'common.actions': 'Actions',
+    'common.thisWeek': 'This Week',
+    'common.thisMonth': 'This Month',
+    'common.thisQuarter': 'This Quarter',
+    'common.thisYear': 'This Year',
     // Profile
     'profile.title': 'Profile Settings',
     'profile.picture': 'Profile Picture',
@@ -148,6 +166,24 @@ const translations = {
     'dashboard.getSupport': 'Get Support Now',
   },
   hi: {
+    // Students management
+    'students.title': 'छात्र प्रबंधन',
+    'students.subtitle': 'छात्र खातों का प्रबंधन और निगरानी करें',
+    'students.search': 'छात्रों को खोजें...',
+    'students.active30': 'सक्रिय (30 दिन)',
+    'students.admins': 'प्रशासक',
+    // Common
+    'common.all': 'सभी',
+    'common.show': 'दिखाएँ',
+    'common.hide': 'छिपाएँ',
+    'common.export': 'निर्यात',
+    'common.student': 'छात्र',
+    'common.status': 'स्थिति',
+    'common.actions': 'क्रियाएँ',
+    'common.thisWeek': 'इस सप्ताह',
+    'common.thisMonth': 'इस माह',
+    'common.thisQuarter': 'इस तिमाही',
+    'common.thisYear': 'इस वर्ष',
     // Profile
     'profile.title': 'प्रोफ़ाइल सेटिंग्स',
     'profile.picture': 'प्रोफ़ाइल फोटो',
@@ -283,6 +319,24 @@ const translations = {
     'dashboard.getSupport': 'अभी सहायता लें',
   },
   de: {
+    // Students management
+    'students.title': 'Studentenverwaltung',
+    'students.subtitle': 'Studentenkonten verwalten und überwachen',
+    'students.search': 'Studenten suchen...',
+    'students.active30': 'Aktiv (30 Tage)',
+    'students.admins': 'Admins',
+    // Common
+    'common.all': 'Alle',
+    'common.show': 'Anzeigen',
+    'common.hide': 'Ausblenden',
+    'common.export': 'Exportieren',
+    'common.student': 'Student',
+    'common.status': 'Status',
+    'common.actions': 'Aktionen',
+    'common.thisWeek': 'Diese Woche',
+    'common.thisMonth': 'Diesen Monat',
+    'common.thisQuarter': 'Dieses Quartal',
+    'common.thisYear': 'Dieses Jahr',
     // Profile
     'profile.title': 'Profileinstellungen',
     'profile.picture': 'Profilbild',
@@ -418,6 +472,24 @@ const translations = {
     'dashboard.getSupport': 'Jetzt Unterstützung',
   },
   es: {
+    // Students management
+    'students.title': 'Gestión de Estudiantes',
+    'students.subtitle': 'Administra y monitorea cuentas de estudiantes',
+    'students.search': 'Buscar estudiantes...',
+    'students.active30': 'Activos (30 días)',
+    'students.admins': 'Administradores',
+    // Common
+    'common.all': 'Todos',
+    'common.show': 'Mostrar',
+    'common.hide': 'Ocultar',
+    'common.export': 'Exportar',
+    'common.student': 'Estudiante',
+    'common.status': 'Estado',
+    'common.actions': 'Acciones',
+    'common.thisWeek': 'Esta semana',
+    'common.thisMonth': 'Este mes',
+    'common.thisQuarter': 'Este trimestre',
+    'common.thisYear': 'Este año',
     // Profile
     'profile.title': 'Configuración de Perfil',
     'profile.picture': 'Foto de Perfil',
@@ -553,6 +625,24 @@ const translations = {
     'dashboard.getSupport': 'Obtener ayuda ahora',
   },
   ks: {
+    // Students management
+    'students.title': 'طالب علم انتظام',
+    'students.subtitle': 'طالب علم اکاؤنٹس کی نگرانی اور انتظام کریں',
+    'students.search': 'طالب علم تلاش کریں...',
+    'students.active30': 'فعال (30 دن)',
+    'students.admins': 'ایڈمنز',
+    // Common
+    'common.all': 'سبھی',
+    'common.show': 'دکھائیں',
+    'common.hide': 'چھپائیں',
+    'common.export': 'برآمد',
+    'common.student': 'طالب علم',
+    'common.status': 'حالت',
+    'common.actions': 'اعمال',
+    'common.thisWeek': 'اس ہفتے',
+    'common.thisMonth': 'اس مہینے',
+    'common.thisQuarter': 'اس سہ ماہی',
+    'common.thisYear': 'اس سال',
     // Profile
     'profile.title': 'پروفائل سیٹنگز',
     'profile.picture': 'پروفائل تصویر',

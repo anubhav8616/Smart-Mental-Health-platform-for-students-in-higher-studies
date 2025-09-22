@@ -20,6 +20,7 @@ import {
   ClipboardCheck, // New Icon
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
+import { ScheduleMeeting } from './schedule-meeting';
 
 interface DashboardProps {
   onSectionChange: (section: string) => void;
@@ -37,6 +38,7 @@ const getStartOfWeek = (date: Date) => {
 
 export function Dashboard({ onSectionChange, userData }: DashboardProps) {
   const { t } = useLanguage();
+  const [showScheduleMeeting, setShowScheduleMeeting] = useState(false);
   const [showAssessment, setShowAssessment] = useState(false);
   const [assessmentHistory, setAssessmentHistory] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -239,13 +241,18 @@ export function Dashboard({ onSectionChange, userData }: DashboardProps) {
                                 </p>
                             </div>
                         </div>
-                        <Button 
-                            onClick={() => setShowAssessment(true)} 
-                            disabled={!canTakeAssessment}
-                            className="w-auto"
-                        >
-                            {canTakeAssessment ? (t('dashboard.takeAssessment') || 'Take Assessment') : (t('dashboard.limitReached') || 'Weekly Limit Reached')}
-                        </Button>
+                        <div className="flex gap-2">
+                          <Button 
+                              onClick={() => setShowAssessment(true)} 
+                              disabled={!canTakeAssessment}
+                              className="w-auto"
+                          >
+                              {canTakeAssessment ? (t('dashboard.takeAssessment') || 'Take Assessment') : (t('dashboard.limitReached') || 'Weekly Limit Reached')}
+                          </Button>
+                          <Button variant="outline" onClick={() => setShowScheduleMeeting(true)} className="w-auto">
+                            {t('admin.scheduleMeeting')}
+                          </Button>
+                        </div>
                     </CardContent>
                 </Card>
             </motion.div>
@@ -369,6 +376,9 @@ export function Dashboard({ onSectionChange, userData }: DashboardProps) {
           </div>
         </div>
       </div>
+      {showScheduleMeeting && (
+        <ScheduleMeeting onClose={() => setShowScheduleMeeting(false)} />
+      )}
     </div>
   );
 }

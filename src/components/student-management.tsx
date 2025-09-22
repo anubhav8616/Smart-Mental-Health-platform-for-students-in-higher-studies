@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useLanguage } from '../context/LanguageContext';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -74,6 +75,7 @@ interface AssessmentResult {
 }
 
 export function StudentManagement() {
+  const { t } = useLanguage();
   const [students, setStudents] = useState<Student[]>([]);
   const [filteredStudents, setFilteredStudents] = useState<Student[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -306,17 +308,17 @@ export function StudentManagement() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">Student Management</h1>
-          <p className="text-muted-foreground">Manage and monitor student accounts</p>
+          <h1 className="text-3xl font-bold">{t('students.title') || 'Student Management'}</h1>
+          <p className="text-muted-foreground">{t('students.subtitle') || 'Manage and monitor student accounts'}</p>
         </div>
         <div className="flex gap-2">
           <Button onClick={() => setShowAnalytics(!showAnalytics)} variant="outline">
             <BarChart3 className="w-4 h-4 mr-2" />
-            {showAnalytics ? 'Hide' : 'Show'} Analytics
+            {showAnalytics ? (t('common.hide') || 'Hide') : (t('common.show') || 'Show')} {t('nav.analytics')}
           </Button>
           <Button>
             <Download className="w-4 h-4 mr-2" />
-            Export Data
+            {t('common.export') || 'Export Data'}
           </Button>
         </div>
       </div>
@@ -329,7 +331,7 @@ export function StudentManagement() {
               <div className="flex items-center">
                 <Users className="h-8 w-8 text-blue-600" />
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-muted-foreground">Total Students</p>
+                  <p className="text-sm font-medium text-muted-foreground">{t('reports.totalStudents') || 'Total Students'}</p>
                   <p className="text-2xl font-bold">{analyticsData.totalStudents}</p>
                 </div>
               </div>
@@ -340,7 +342,7 @@ export function StudentManagement() {
               <div className="flex items-center">
                 <TrendingUp className="h-8 w-8 text-green-600" />
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-muted-foreground">Active (30 days)</p>
+                  <p className="text-sm font-medium text-muted-foreground">{t('students.active30') || 'Active (30 days)'}</p>
                   <p className="text-2xl font-bold">{analyticsData.activeStudents}</p>
                 </div>
               </div>
@@ -351,7 +353,7 @@ export function StudentManagement() {
               <div className="flex items-center">
                 <AlertTriangle className="h-8 w-8 text-red-600" />
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-muted-foreground">High Risk</p>
+                  <p className="text-sm font-medium text-muted-foreground">{t('reports.highRisk') || 'High Risk'}</p>
                   <p className="text-2xl font-bold">{analyticsData.highRiskStudents}</p>
                 </div>
               </div>
@@ -362,7 +364,7 @@ export function StudentManagement() {
               <div className="flex items-center">
                 <BarChart3 className="h-8 w-8 text-purple-600" />
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-muted-foreground">Avg Mood</p>
+                  <p className="text-sm font-medium text-muted-foreground">{t('reports.avgMood') || 'Avg Mood'}</p>
                   <p className="text-2xl font-bold">{analyticsData.averageMood.toFixed(1)}</p>
                 </div>
               </div>
@@ -423,11 +425,11 @@ export function StudentManagement() {
       <Card>
         <CardContent className="p-6">
           <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1">
+          <div className="flex-1">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                 <Input
-                  placeholder="Search students..."
+                placeholder={t('students.search') || 'Search students...'}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
@@ -440,21 +442,21 @@ export function StudentManagement() {
                 onClick={() => setFilterRole('all')}
                 size="sm"
               >
-                All
+                {t('common.all') || 'All'}
               </Button>
               <Button
                 variant={filterRole === 'student' ? 'default' : 'outline'}
                 onClick={() => setFilterRole('student')}
                 size="sm"
               >
-                Students
+                {t('nav.students')}
               </Button>
               <Button
                 variant={filterRole === 'admin' ? 'default' : 'outline'}
                 onClick={() => setFilterRole('admin')}
                 size="sm"
               >
-                Admins
+                {t('students.admins') || 'Admins'}
               </Button>
             </div>
           </div>
