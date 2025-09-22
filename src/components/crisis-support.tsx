@@ -8,20 +8,20 @@ const immediateHelp = [
   {
     title: 'Emergency Services',
     description: 'For immediate danger to yourself or others.',
-    contact: '911',
+    contact: '112',
     icon: Phone,
     color: 'bg-red-500 hover:bg-red-600',
   },
   {
     title: 'National Crisis & Suicide Hotline',
     description: '24/7, free and confidential support.',
-    contact: '988',
+    contact: '7893078930',
     icon: Phone,
     color: 'bg-blue-500 hover:bg-blue-600',
   },
   {
     title: 'Crisis Text Line',
-    description: 'Text HOME to 741741 from anywhere in the US.',
+    description: 'Text HOME to 741741 from anywhere in the India.',
     contact: '741741',
     icon: MessageCircle,
     color: 'bg-green-500 hover:bg-green-600',
@@ -29,9 +29,9 @@ const immediateHelp = [
 ];
 
 const universityResources = [
-    { name: 'Campus Counseling Services', hours: 'M-F, 9am-5pm', phone: '(555) 123-4567' },
-    { name: 'University Police (Non-Emergency)', hours: '24/7', phone: '(555) 123-4568' },
-    { name: 'Dean of Students Office', hours: 'M-F, 9am-5pm', phone: '(555) 123-4569' },
+    { name: 'Campus Counseling Services', hours: 'M-F, 9am-5pm', phone: '800-103-8484' },
+    { name: 'University Police (Non-Emergency)', hours: '24/7', phone: '1800 103 8484' },
+    { name: 'Dean of Students Office', hours: 'M-F, 9am-5pm', phone: '0120-7199360' },
 ];
 
 const groundingTechniques = [
