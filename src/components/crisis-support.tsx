@@ -1,37 +1,37 @@
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
-import { Phone, MessageCircle, Shield, Wind, University } from 'lucide-react';
+import { Phone, MessageCircle, Wind, University } from 'lucide-react';
 
-// Data for resources can be managed here or fetched from a CMS
+// Data for resources has been updated for India
 const immediateHelp = [
   {
     title: 'Emergency Services',
-    description: 'For immediate danger to yourself or others.',
+    description: 'For immediate danger to yourself or others. (Police, Fire, Ambulance)',
     contact: '112',
     icon: Phone,
     color: 'bg-red-500 hover:bg-red-600',
   },
   {
-    title: 'National Crisis & Suicide Hotline',
-    description: '24/7, free and confidential support.',
-    contact: '9152987821',
+    title: 'KIRAN Mental Health Helpline',
+    description: 'Government of India\'s 24/7 mental health support.',
+    contact: '1800-599-0019',
     icon: Phone,
     color: 'bg-blue-500 hover:bg-blue-600',
   },
   {
-    title: 'Crisis Text Line',
-    description: 'Text HOME to 741741 from anywhere in the US.',
-    contact: '741741',
+    title: 'AASRA Emotional Support',
+    description: 'A 24/7 helpline for those who are distressed and suicidal.',
+    contact: '+91-9820466726',
     icon: MessageCircle,
     color: 'bg-green-500 hover:bg-green-600',
   },
 ];
 
 const universityResources = [
-    { name: 'Campus Counseling Services', hours: 'M-F, 9am-5pm', phone: '(555) 123-4567' },
-    { name: 'University Police (Non-Emergency)', hours: '24/7', phone: '(555) 123-4568' },
-    { name: 'Dean of Students Office', hours: 'M-F, 9am-5pm', phone: '(555) 123-4569' },
+    { name: 'Campus Counseling Services', hours: 'M-F, 9am-5pm', phone: '0120-123-4567' },
+    { name: 'Campus Security (Non-Emergency)', hours: '24/7', phone: '0120-123-4568' },
+    { name: 'Dean of Students Office', hours: 'M-F, 9am-5pm', phone: '0120-123-4569' },
 ];
 
 const groundingTechniques = [
@@ -93,7 +93,7 @@ export function CrisisSupport() {
                     <item.icon className="w-8 h-8 mb-2" />
                     <span className="font-semibold text-lg">{item.title}</span>
                     <span className="font-bold text-2xl my-1">{item.contact}</span>
-                    <span className="text-xs opacity-90">{item.description}</span>
+                    <span className="text-xs opacity-90 text-center">{item.description}</span>
                   </Button>
                 </a>
               </motion.div>
