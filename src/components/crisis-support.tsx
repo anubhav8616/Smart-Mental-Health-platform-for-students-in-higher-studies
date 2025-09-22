@@ -7,7 +7,7 @@ import { Phone, MessageCircle, Shield, Wind, University } from 'lucide-react';
 const immediateHelp = [
   {
     title: 'Emergency Services',
-    description: 'For immediate danger to yourself or others.',
+    description: 'For immediate danger to yourself or to others.',
     contact: '112',
     icon: Phone,
     color: 'bg-red-500 hover:bg-red-600',
