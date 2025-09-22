@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Progress } from './ui/progress'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts'
 import { Calendar, Download, FileText, TrendingUp, TrendingDown, Activity, Heart, Brain, Clock } from 'lucide-react'
+import { useLanguage } from '../context/LanguageContext'
 
 interface StudentReportsProps {
   userData?: any
@@ -31,6 +32,7 @@ interface AssessmentResult {
 }
 
 export function StudentReports({ userData }: StudentReportsProps) {
+  const { t } = useLanguage()
   const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7)); // Default to current month
   const [moodHistory, setMoodHistory] = useState<MoodEntry[]>([]);
   const [assessmentHistory, setAssessmentHistory] = useState<AssessmentResult[]>([]);
@@ -117,14 +119,14 @@ export function StudentReports({ userData }: StudentReportsProps) {
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8">
             <div>
               <h1 className="bg-gradient-to-r from-violet-600 to-purple-600 dark:from-violet-300 dark:to-purple-300 bg-clip-text text-transparent mb-2">
-                My Reports & Records
+                {t('reports.student.title') || 'My Reports & Records'}
               </h1>
-              <p className="text-muted-foreground">Track your mental health journey and progress over time</p>
+              <p className="text-muted-foreground">{t('reports.student.subtitle') || 'Track your mental health journey and progress over time'}</p>
             </div>
             <div className="flex items-center gap-3 mt-4 lg:mt-0">
               <Select value={selectedMonth} onValueChange={setSelectedMonth}>
                 <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Select month" />
+                  <SelectValue placeholder={t('reports.selectMonth') || 'Select month'} />
                 </SelectTrigger>
                 <SelectContent>
                   {months.map((month) => (
@@ -136,16 +138,16 @@ export function StudentReports({ userData }: StudentReportsProps) {
               </Select>
               <Button variant="outline" size="sm">
                 <Download className="w-4 h-4 mr-2" />
-                Export
+                {t('common.export') || 'Export'}
               </Button>
             </div>
           </div>
 
           <Tabs defaultValue="monthly" className="w-full">
             <TabsList className="grid w-full grid-cols-3 lg:w-[400px]">
-              <TabsTrigger value="monthly">Monthly Summary</TabsTrigger>
-              <TabsTrigger value="progress">Progress Tracking</TabsTrigger>
-              <TabsTrigger value="medical">Medical Reports</TabsTrigger>
+              <TabsTrigger value="monthly">{t('reports.tab.monthly') || 'Monthly Summary'}</TabsTrigger>
+              <TabsTrigger value="progress">{t('reports.tab.progress') || 'Progress Tracking'}</TabsTrigger>
+              <TabsTrigger value="medical">{t('reports.tab.medical') || 'Medical Reports'}</TabsTrigger>
             </TabsList>
 
             <TabsContent value="monthly" className="space-y-6 mt-6">
@@ -154,7 +156,7 @@ export function StudentReports({ userData }: StudentReportsProps) {
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm text-muted-foreground">Average Mood</p>
+                        <p className="text-sm text-muted-foreground">{t('reports.avgMood') || 'Average Mood'}</p>
                         <div className="flex items-center gap-2">
                           <p className="text-2xl font-bold">{monthlyStats.averageMood}</p>
                           {monthlyStats.moodTrend === 'up' ? (
@@ -172,7 +174,7 @@ export function StudentReports({ userData }: StudentReportsProps) {
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm text-muted-foreground">Sessions Completed</p>
+                        <p className="text-sm text-muted-foreground">{t('reports.sessionsCompleted') || 'Sessions Completed'}</p>
                         <p className="text-2xl font-bold">{monthlyStats.sessionsCompleted}</p>
                       </div>
                       <Activity className="w-8 h-8 text-blue-500" />
@@ -183,7 +185,7 @@ export function StudentReports({ userData }: StudentReportsProps) {
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm text-muted-foreground">Goals Progress</p>
+                        <p className="text-sm text-muted-foreground">{t('reports.goalsProgress') || 'Goals Progress'}</p>
                         <p className="text-2xl font-bold">{Math.round((monthlyStats.goalsAchieved / monthlyStats.totalGoals) * 100)}%</p>
                         <Progress value={(monthlyStats.goalsAchieved / monthlyStats.totalGoals) * 100} className="mt-2" />
                       </div>
@@ -195,7 +197,7 @@ export function StudentReports({ userData }: StudentReportsProps) {
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm text-muted-foreground">Sleep Average</p>
+                        <p className="text-sm text-muted-foreground">{t('reports.sleepAverage') || 'Sleep Average'}</p>
                         <p className="text-2xl font-bold">{monthlyStats.sleepAverage}h</p>
                       </div>
                       <Clock className="w-8 h-8 text-purple-500" />
@@ -205,8 +207,8 @@ export function StudentReports({ userData }: StudentReportsProps) {
               </div>
               <Card>
                 <CardHeader>
-                  <CardTitle>Daily Mood Tracking</CardTitle>
-                  <CardDescription>Your mood, anxiety, stress, and sleep patterns from daily logs</CardDescription>
+                  <CardTitle>{t('reports.dailyMood') || 'Daily Mood Tracking'}</CardTitle>
+                  <CardDescription>{t('reports.dailyMoodDesc') || 'Your mood, anxiety, stress, and sleep patterns from daily logs'}</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="h-[300px] w-full">
@@ -229,7 +231,7 @@ export function StudentReports({ userData }: StudentReportsProps) {
                         </LineChart>
                       </ResponsiveContainer>
                     ) : (
-                      <div className="flex items-center justify-center h-full text-muted-foreground">No daily mood data for this month.</div>
+                      <div className="flex items-center justify-center h-full text-muted-foreground">{t('reports.noMoodData') || 'No daily mood data for this month.'}</div>
                     )}
                   </div>
                 </CardContent>
@@ -239,8 +241,8 @@ export function StudentReports({ userData }: StudentReportsProps) {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <Card>
                   <CardHeader>
-                    <CardTitle>Goal Focus Areas</CardTitle>
-                    <CardDescription>Distribution based on your latest assessment</CardDescription>
+                    <CardTitle>{t('reports.goalFocus') || 'Goal Focus Areas'}</CardTitle>
+                    <CardDescription>{t('reports.goalFocusDesc') || 'Distribution based on your latest assessment'}</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="h-[250px] w-full">
@@ -270,8 +272,8 @@ export function StudentReports({ userData }: StudentReportsProps) {
             <TabsContent value="medical" className="space-y-6 mt-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>Assessment Reports</CardTitle>
-                  <CardDescription>Your complete assessment history and recommendations</CardDescription>
+                  <CardTitle>{t('reports.assessmentReports') || 'Assessment Reports'}</CardTitle>
+                  <CardDescription>{t('reports.assessmentReportsDesc') || 'Your complete assessment history and recommendations'}</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
@@ -296,12 +298,12 @@ export function StudentReports({ userData }: StudentReportsProps) {
                                   <Calendar className="w-4 h-4" />
                                   {new Date(report.date).toLocaleDateString()}
                                 </span>
-                                <span>Provider: {report.provider}</span>
+                                <span>{t('reports.provider') || 'Provider'}: {report.provider}</span>
                               </div>
                             </div>
                             <p className="text-sm mb-3">{report.summary}</p>
                             <div>
-                              <p className="text-sm font-medium mb-1">Recommendations:</p>
+                              <p className="text-sm font-medium mb-1">{t('reports.recommendations') || 'Recommendations'}:</p>
                               <ul className="text-sm text-muted-foreground list-disc list-inside">
                                 {report.recommendations.map((rec, index) => (
                                   <li key={index}>{rec}</li>
@@ -318,7 +320,7 @@ export function StudentReports({ userData }: StudentReportsProps) {
                         </div>
                       </motion.div>
                     )) : (
-                        <div className="text-center py-8 text-muted-foreground">No assessment reports for this month.</div>
+                        <div className="text-center py-8 text-muted-foreground">{t('reports.noAssessments') || 'No assessment reports for this month.'}</div>
                     )}
                   </div>
                 </CardContent>

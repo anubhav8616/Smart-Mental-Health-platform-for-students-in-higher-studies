@@ -11,8 +11,10 @@ import { Progress } from './ui/progress'
 import { Alert, AlertDescription } from './ui/alert'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell, AreaChart, Area } from 'recharts'
 import { Search, Download, FileText, Users, AlertTriangle, TrendingUp, Filter, Calendar, Eye, Phone } from 'lucide-react'
+import { useLanguage } from '../context/LanguageContext'
 
 export function AdminReports() {
+  const { t } = useLanguage()
   const [searchTerm, setSearchTerm] = useState('')
   const [filterStatus, setFilterStatus] = useState('all')
   const [filterDepartment, setFilterDepartment] = useState('all')
@@ -187,9 +189,9 @@ export function AdminReports() {
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8">
             <div>
               <h1 className="bg-gradient-to-r from-slate-600 to-blue-600 dark:from-slate-300 dark:to-blue-300 bg-clip-text text-transparent mb-2">
-                Student Health Reports
+                {t('reports.admin.title') || 'Student Health Reports'}
               </h1>
-              <p className="text-muted-foreground">Comprehensive medical records and mental health analytics</p>
+              <p className="text-muted-foreground">{t('reports.admin.subtitle') || 'Comprehensive medical records and mental health analytics'}</p>
             </div>
             <div className="flex items-center gap-3 mt-4 lg:mt-0">
               <Select value={selectedTimeframe} onValueChange={setSelectedTimeframe}>
@@ -197,15 +199,15 @@ export function AdminReports() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="week">This Week</SelectItem>
-                  <SelectItem value="month">This Month</SelectItem>
-                  <SelectItem value="quarter">This Quarter</SelectItem>
-                  <SelectItem value="year">This Year</SelectItem>
+                <SelectItem value="week">{t('common.thisWeek') || 'This Week'}</SelectItem>
+                <SelectItem value="month">{t('common.thisMonth') || 'This Month'}</SelectItem>
+                <SelectItem value="quarter">{t('common.thisQuarter') || 'This Quarter'}</SelectItem>
+                <SelectItem value="year">{t('common.thisYear') || 'This Year'}</SelectItem>
                 </SelectContent>
               </Select>
               <Button variant="outline" size="sm">
                 <Download className="w-4 h-4 mr-2" />
-                Export Report
+              {t('common.export') || 'Export Report'}
               </Button>
             </div>
           </div>
@@ -219,7 +221,7 @@ export function AdminReports() {
             <Alert className="border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950">
               <AlertTriangle className="h-4 w-4 text-red-600" />
               <AlertDescription className="text-red-800 dark:text-red-300">
-                <strong>{overallStats.criticalCases} students</strong> require immediate attention. Review high-risk cases in the detailed reports below.
+                <strong>{overallStats.criticalCases} {t('reports.students') || 'students'}</strong> {t('reports.immediateAttention') || 'require immediate attention. Review high-risk cases in the detailed reports below.'}
               </AlertDescription>
             </Alert>
           </motion.div>
@@ -234,9 +236,9 @@ export function AdminReports() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-muted-foreground">Total Students</p>
+                    <p className="text-sm text-muted-foreground">{t('reports.totalStudents') || 'Total Students'}</p>
                     <p className="text-2xl font-bold">{overallStats.totalStudents}</p>
-                    <p className="text-xs text-green-600">+{overallStats.monthlyIncrease}% this month</p>
+                    <p className="text-xs text-green-600">+{overallStats.monthlyIncrease}% {t('common.thisMonth') || 'this month'}</p>
                   </div>
                   <Users className="w-8 h-8 text-blue-500" />
                 </div>
@@ -247,7 +249,7 @@ export function AdminReports() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-muted-foreground">Active Cases</p>
+                    <p className="text-sm text-muted-foreground">{t('reports.activeCases') || 'Active Cases'}</p>
                     <p className="text-2xl font-bold">{overallStats.activeStudents}</p>
                     <Progress value={(overallStats.activeStudents / overallStats.totalStudents) * 100} className="mt-2" />
                   </div>
@@ -260,9 +262,9 @@ export function AdminReports() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-muted-foreground">Critical Cases</p>
+                    <p className="text-sm text-muted-foreground">{t('reports.criticalCases') || 'Critical Cases'}</p>
                     <p className="text-2xl font-bold text-red-600">{overallStats.criticalCases}</p>
-                    <p className="text-xs text-muted-foreground">Require immediate attention</p>
+                    <p className="text-xs text-muted-foreground">{t('reports.requireAttention') || 'Require immediate attention'}</p>
                   </div>
                   <AlertTriangle className="w-8 h-8 text-red-500" />
                 </div>
@@ -273,11 +275,11 @@ export function AdminReports() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-muted-foreground">Avg Mood Score</p>
+                    <p className="text-sm text-muted-foreground">{t('reports.avgMoodScore') || 'Avg Mood Score'}</p>
                     <p className="text-2xl font-bold">{overallStats.avgMoodScore}</p>
                     <div className="flex items-center gap-1 mt-1">
                       <TrendingUp className="w-3 h-3 text-green-500" />
-                      <p className="text-xs text-green-600">Improving</p>
+                      <p className="text-xs text-green-600">{t('common.improving') || 'Improving'}</p>
                     </div>
                   </div>
                   <TrendingUp className="w-8 h-8 text-purple-500" />
@@ -288,18 +290,18 @@ export function AdminReports() {
 
           <Tabs defaultValue="overview" className="w-full">
             <TabsList className="grid w-full grid-cols-4 lg:w-[500px]">
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="records">Student Records</TabsTrigger>
-              <TabsTrigger value="analytics">Analytics</TabsTrigger>
-              <TabsTrigger value="departments">Departments</TabsTrigger>
+              <TabsTrigger value="overview">{t('reports.tab.overview') || 'Overview'}</TabsTrigger>
+              <TabsTrigger value="records">{t('reports.tab.records') || 'Student Records'}</TabsTrigger>
+              <TabsTrigger value="analytics">{t('reports.tab.analytics') || 'Analytics'}</TabsTrigger>
+              <TabsTrigger value="departments">{t('reports.tab.departments') || 'Departments'}</TabsTrigger>
             </TabsList>
 
             <TabsContent value="overview" className="space-y-6 mt-6">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <Card>
                   <CardHeader>
-                    <CardTitle>Monthly Trends</CardTitle>
-                    <CardDescription>New cases, resolved cases, and active students</CardDescription>
+                    <CardTitle>{t('reports.monthlyTrends') || 'Monthly Trends'}</CardTitle>
+                    <CardDescription>{t('reports.trendsDesc') || 'New cases, resolved cases, and active students'}</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="h-[300px] w-full">
@@ -320,8 +322,8 @@ export function AdminReports() {
 
                 <Card>
                   <CardHeader>
-                    <CardTitle>Risk Level Distribution</CardTitle>
-                    <CardDescription>Current risk assessment of all students</CardDescription>
+                    <CardTitle>{t('reports.riskDistribution') || 'Risk Level Distribution'}</CardTitle>
+                    <CardDescription>{t('reports.riskDesc') || 'Current risk assessment of all students'}</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="h-[300px] w-full">
@@ -352,15 +354,15 @@ export function AdminReports() {
             <TabsContent value="records" className="space-y-6 mt-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>Student Medical Records</CardTitle>
-                  <CardDescription>Comprehensive view of all student mental health records</CardDescription>
+                  <CardTitle>{t('reports.recordsTitle') || 'Student Medical Records'}</CardTitle>
+                  <CardDescription>{t('reports.recordsDesc') || 'Comprehensive view of all student mental health records'}</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="flex flex-col md:flex-row gap-4 mb-6">
                     <div className="relative flex-1">
                       <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                       <Input
-                        placeholder="Search by name, ID, or department..."
+                        placeholder={t('reports.searchPlaceholder') || 'Search by name, ID, or department...'}
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="pl-10"
@@ -372,18 +374,18 @@ export function AdminReports() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all">All Status</SelectItem>
-                        <SelectItem value="active">Active</SelectItem>
-                        <SelectItem value="monitoring">Monitoring</SelectItem>
-                        <SelectItem value="critical">Critical</SelectItem>
+                        <SelectItem value="all">{t('common.allStatus') || 'All Status'}</SelectItem>
+                        <SelectItem value="active">{t('common.active') || 'Active'}</SelectItem>
+                        <SelectItem value="monitoring">{t('common.monitoring') || 'Monitoring'}</SelectItem>
+                        <SelectItem value="critical">{t('common.critical') || 'Critical'}</SelectItem>
                       </SelectContent>
                     </Select>
                     <Select value={filterDepartment} onValueChange={setFilterDepartment}>
                       <SelectTrigger className="w-[180px]">
-                        <SelectValue placeholder="Department" />
+                        <SelectValue placeholder={t('reports.department') || 'Department'} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all">All Departments</SelectItem>
+                        <SelectItem value="all">{t('reports.allDepartments') || 'All Departments'}</SelectItem>
                         <SelectItem value="Computer Science">Computer Science</SelectItem>
                         <SelectItem value="Psychology">Psychology</SelectItem>
                         <SelectItem value="Engineering">Engineering</SelectItem>
@@ -398,14 +400,14 @@ export function AdminReports() {
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>Student</TableHead>
-                          <TableHead>Condition</TableHead>
-                          <TableHead>Risk Level</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead>Recent Mood</TableHead>
-                          <TableHead>Sessions</TableHead>
-                          <TableHead>Next Appointment</TableHead>
-                          <TableHead>Actions</TableHead>
+                          <TableHead>{t('common.student') || 'Student'}</TableHead>
+                          <TableHead>{t('reports.condition') || 'Condition'}</TableHead>
+                          <TableHead>{t('reports.riskLevel') || 'Risk Level'}</TableHead>
+                          <TableHead>{t('common.status') || 'Status'}</TableHead>
+                          <TableHead>{t('reports.recentMood') || 'Recent Mood'}</TableHead>
+                          <TableHead>{t('reports.sessions') || 'Sessions'}</TableHead>
+                          <TableHead>{t('reports.nextAppointment') || 'Next Appointment'}</TableHead>
+                          <TableHead>{t('common.actions') || 'Actions'}</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>

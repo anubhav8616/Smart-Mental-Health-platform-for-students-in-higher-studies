@@ -2,6 +2,7 @@ import { motion } from 'motion/react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Phone, MessageCircle, Shield, Wind, University } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 
 // Data for resources can be managed here or fetched from a CMS
 const immediateHelp = [
@@ -58,6 +59,7 @@ const groundingTechniques = [
 ];
 
 export function CrisisSupport() {
+  const { t } = useLanguage();
   return (
     <div className="min-h-screen bg-wellness-gradient p-4 sm:p-6 lg:p-8">
       <div className="max-w-4xl mx-auto">
@@ -67,9 +69,9 @@ export function CrisisSupport() {
           transition={{ duration: 0.5 }}
           className="text-center mb-8"
         >
-          <h1 className="text-3xl font-bold text-foreground">Crisis Support</h1>
+          <h1 className="text-3xl font-bold text-foreground">{t('crisis.title') || 'Crisis Support'}</h1>
           <p className="text-muted-foreground mt-2">
-            If you are in immediate danger, please use the resources below. You are not alone.
+            {t('crisis.subtitle') || 'If you are in immediate danger, please use the resources below. You are not alone.'}
           </p>
         </motion.div>
 
@@ -77,7 +79,7 @@ export function CrisisSupport() {
         <Card className="mb-8 border-red-500/20 bg-card/80 backdrop-blur-sm shadow-xl">
           <CardHeader>
             <CardTitle className="text-red-600 dark:text-red-400 text-center text-2xl">
-              Are you in immediate danger?
+              {t('crisis.immediate') || 'Are you in immediate danger?'}
             </CardTitle>
           </CardHeader>
           <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
@@ -106,14 +108,14 @@ export function CrisisSupport() {
             <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.5 }}>
                 <Card className="h-full bg-card/80 backdrop-blur-sm border-0 shadow-lg">
                     <CardHeader>
-                        <CardTitle className="flex items-center gap-2"><Wind className="text-primary"/>Grounding Techniques</CardTitle>
+                        <CardTitle className="flex items-center gap-2"><Wind className="text-primary"/>{t('crisis.grounding') || 'Grounding Techniques'}</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-6">
                         {groundingTechniques.map(technique => (
                             <div key={technique.title}>
                                 <h3 className="font-semibold mb-2">{technique.title}</h3>
                                 <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
-                                    {technique.steps.map(step => <li key={step}>{step}</li>)}
+                                    {technique.steps.map((step, idx) => <li key={`${technique.title}-${idx}`}>{step}</li>)}
                                 </ul>
                             </div>
                         ))}
@@ -125,7 +127,7 @@ export function CrisisSupport() {
             <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.6 }}>
                 <Card className="h-full bg-card/80 backdrop-blur-sm border-0 shadow-lg">
                     <CardHeader>
-                        <CardTitle className="flex items-center gap-2"><University className="text-primary"/>University Resources</CardTitle>
+                        <CardTitle className="flex items-center gap-2"><University className="text-primary"/>{t('crisis.university') || 'University Resources'}</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         {universityResources.map(resource => (

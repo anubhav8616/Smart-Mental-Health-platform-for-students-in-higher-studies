@@ -21,17 +21,19 @@ import {
   Bookmark
 } from 'lucide-react'
 import { ImageWithFallback } from './figma/ImageWithFallback'
+import { useLanguage } from '../context/LanguageContext'
 
 export function Resources() {
+  const { t } = useLanguage()
   const [searchQuery, setSearchQuery] = useState('')
   const [activeCategory, setActiveCategory] = useState('all')
 
   const categories = [
-    { id: 'all', label: 'All Resources', icon: BookOpen },
-    { id: 'anxiety', label: 'Anxiety', icon: Heart },
-    { id: 'stress', label: 'Stress Management', icon: Brain },
-    { id: 'sleep', label: 'Sleep', icon: Moon },
-    { id: 'motivation', label: 'Motivation', icon: Zap },
+    { id: 'all', label: t('resources.all'), icon: BookOpen },
+    { id: 'anxiety', label: t('resources.anxiety'), icon: Heart },
+    { id: 'stress', label: t('resources.stress'), icon: Brain },
+    { id: 'sleep', label: t('resources.sleep'), icon: Moon },
+    { id: 'motivation', label: t('resources.motivation'), icon: Zap },
   ]
 
   const articles = [
@@ -165,10 +167,10 @@ export function Resources() {
           className="mb-8"
         >
           <h1 className="text-3xl font-bold bg-gradient-to-r from-green-600 to-teal-600 bg-clip-text text-transparent mb-2">
-            Self-Help Resources
+            {t('resources.title')}
           </h1>
           <p className="text-muted-foreground">
-            Discover articles, videos, and audio guides to support your mental wellness journey.
+            {t('resources.subtitle')}
           </p>
         </motion.div>
 
@@ -182,7 +184,7 @@ export function Resources() {
             <div className="relative max-w-md">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
               <Input
-                placeholder="Search resources..."
+                placeholder={t('resources.search')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10 bg-white/80 backdrop-blur-sm"
@@ -217,18 +219,18 @@ export function Resources() {
         </div>
 
         <Tabs defaultValue="articles" className="space-y-6">
-          <TabsList className="bg-white/60 backdrop-blur-sm">
-            <TabsTrigger value="articles" className="flex items-center gap-2">
+            <TabsList className="bg-white/60 backdrop-blur-sm">
+              <TabsTrigger value="articles" className="flex items-center gap-2">
               <BookOpen className="w-4 h-4" />
-              Articles
+                {t('resources.articles')}
             </TabsTrigger>
             <TabsTrigger value="videos" className="flex items-center gap-2">
               <Video className="w-4 h-4" />
-              Videos
+                {t('resources.videos')}
             </TabsTrigger>
             <TabsTrigger value="audio" className="flex items-center gap-2">
               <Headphones className="w-4 h-4" />
-              Audio Guides
+                {t('resources.audio')}
             </TabsTrigger>
           </TabsList>
 
@@ -268,11 +270,11 @@ export function Resources() {
                       <div className="flex items-center justify-between text-sm text-muted-foreground mb-4">
                         <div className="flex items-center gap-1">
                           <Clock className="w-3 h-3" />
-                          {article.readTime} min read
+                          {article.readTime} {t('resources.minRead')}
                         </div>
                         <div className="flex items-center gap-1">
                           <Users className="w-3 h-3" />
-                          {article.popularity} readers
+                          {article.popularity} {t('resources.readers')}
                         </div>
                       </div>
                       <div className="flex flex-wrap gap-1 mb-4">
@@ -291,7 +293,7 @@ export function Resources() {
                         }}
                         disabled={!article.href}
                       >
-                        Read Article
+                        {t('resources.readArticle')}
                       </Button>
                     </CardContent>
                   </Card>
@@ -345,7 +347,7 @@ export function Resources() {
                         }}
                         disabled={!video.href}
                       >
-                        Watch Video
+                        {t('resources.watchVideo')}
                       </Button>
                     </CardContent>
                   </Card>
@@ -392,7 +394,7 @@ export function Resources() {
                             disabled={!audio.href}
                           >
                             <PlayCircle className="w-4 h-4 mr-2" />
-                            Play
+                            {t('resources.play')}
                           </Button>
                         </div>
                       </div>

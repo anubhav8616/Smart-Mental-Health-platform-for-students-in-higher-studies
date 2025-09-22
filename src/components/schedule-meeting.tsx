@@ -8,7 +8,7 @@ import { Textarea } from './ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Calendar } from './ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
-import { CalendarIcon, Clock, Users, FileText } from 'lucide-react';
+import { CalendarIcon, Clock, Users, FileText, CheckCircle2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from './ui/utils';
 import { supabase } from '../supabaseClient';
@@ -21,13 +21,15 @@ interface ScheduleMeetingProps {
 
 interface Student {
   id: string;
-  email: string;
+  email?: string;
+  username?: string;
   name?: string;
 }
 
 interface Counselor {
   id: string;
-  email: string;
+  email?: string;
+  username?: string;
   name?: string;
 }
 
@@ -43,6 +45,14 @@ export function ScheduleMeeting({ onClose }: ScheduleMeetingProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [students, setStudents] = useState<Student[]>([]);
   const [counselors, setCounselors] = useState<Counselor[]>([]);
+  const [confirmation, setConfirmation] = useState<null | {
+    studentEmail: string
+    counselorEmail: string
+    date: string
+    time: string
+    duration: number
+    type: string
+  }>(null)
 
   // Load students and counselors on component mount
   useEffect(() => {
@@ -51,24 +61,45 @@ export function ScheduleMeeting({ onClose }: ScheduleMeetingProps) {
 
   const loadStudentsAndCounselors = async () => {
     try {
-      // Load students (users with role 'student')
-      const { data: studentsData, error: studentsError } = await supabase
-        .from('profiles')
-        .select('id, email, name')
-        .eq('role', 'student');
+      // Attempt to fetch with role/email columns. Fallback if columns don't exist
+      let studentsData: any[] | null = null;
+      let counselorsData: any[] | null = null;
 
-      if (studentsError) throw studentsError;
+      try {
+        const res = await supabase
+          .from('profiles')
+          .select('id, email, username, name')
+          .eq('role', 'student');
+        if (res.error && res.error.code === '42703') throw res.error;
+        studentsData = res.data || [];
+      } catch (_) {
+        const res = await supabase
+          .from('profiles')
+          .select('*');
+        studentsData = (res.data || []).slice(0, 100);
+      }
 
-      // Load counselors (users with role 'admin' or 'counselor')
-      const { data: counselorsData, error: counselorsError } = await supabase
-        .from('profiles')
-        .select('id, email, name')
-        .in('role', ['admin', 'counselor']);
+      try {
+        const res = await supabase
+          .from('profiles')
+          .select('id, email, username, name')
+          .in('role', ['admin', 'counselor']);
+        if (res.error && res.error.code === '42703') throw res.error;
+        counselorsData = res.data || [];
+      } catch (_) {
+        const res = await supabase
+          .from('profiles')
+          .select('*');
+        counselorsData = (res.data || []).slice(0, 100);
+      }
 
-      if (counselorsError) throw counselorsError;
-
-      setStudents(studentsData || []);
-      setCounselors(counselorsData || []);
+      // Map email fallbacks
+      const normalizeEmail = (row: any) => {
+        const value: string | undefined = row?.email || (typeof row?.username === 'string' && row.username.includes('@') ? row.username : undefined);
+        return value;
+      };
+      setStudents((studentsData || []).map(r => ({ id: r.id, email: normalizeEmail(r), username: r.username, name: r.name })));
+      setCounselors((counselorsData || []).map(r => ({ id: r.id, email: normalizeEmail(r), username: r.username, name: r.name })));
     } catch (error) {
       console.error('Error loading users:', error);
       toast.error(t('common.error'));
@@ -79,7 +110,7 @@ export function ScheduleMeeting({ onClose }: ScheduleMeetingProps) {
     e.preventDefault();
     
     if (!selectedStudent || !selectedCounselor || !selectedDate || !selectedTime || !meetingType) {
-      toast.error('Please fill in all required fields');
+      toast.error(t('meeting.error') || 'Please fill in all required fields');
       return;
     }
 
@@ -104,8 +135,54 @@ export function ScheduleMeeting({ onClose }: ScheduleMeetingProps) {
 
       if (error) throw error;
 
+      // Build confirmation details
+      const selectedStudentRow = students.find(s => s.id === selectedStudent)
+      const selectedCounselorRow = counselors.find(c => c.id === selectedCounselor)
+      const studentEmail = selectedStudentRow?.email || (selectedStudentRow?.username && selectedStudentRow.username.includes('@') ? selectedStudentRow.username : '')
+      const counselorEmail = selectedCounselorRow?.email || (selectedCounselorRow?.username && selectedCounselorRow.username.includes('@') ? selectedCounselorRow.username : '')
+      const dateStr = meetingData.meeting_date
+      const timeStr = meetingData.meeting_time
+      const durationNum = meetingData.duration
+      const typeStr = meetingData.meeting_type
+
+      // Send email notifications (best-effort)
+      const subject = `Meeting scheduled on ${dateStr} at ${timeStr}`
+      const html = `
+        <div>
+          <h2>Meeting Scheduled</h2>
+          <p><strong>Date:</strong> ${dateStr}</p>
+          <p><strong>Time:</strong> ${timeStr}</p>
+          <p><strong>Duration:</strong> ${durationNum} minutes</p>
+          <p><strong>Type:</strong> ${typeStr}</p>
+          ${notes ? `<p><strong>Notes:</strong> ${notes}</p>` : ''}
+        </div>
+      `
+      try {
+        if (studentEmail) {
+          fetch('/api/send-email', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ to: studentEmail, subject, html })
+          }).catch(() => {})
+        }
+        if (counselorEmail) {
+          fetch('/api/send-email', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ to: counselorEmail, subject, html })
+          }).catch(() => {})
+        }
+      } catch {}
+
+      setConfirmation({
+        studentEmail,
+        counselorEmail,
+        date: dateStr,
+        time: timeStr,
+        duration: durationNum,
+        type: typeStr,
+      })
       toast.success(t('meeting.success'));
-      onClose();
     } catch (error) {
       console.error('Error scheduling meeting:', error);
       toast.error(t('meeting.error'));
@@ -158,7 +235,7 @@ export function ScheduleMeeting({ onClose }: ScheduleMeetingProps) {
                   </SelectTrigger>
                   <SelectContent>
                     {students.map((student) => (
-                      <SelectItem key={student.id} value={student.id}>
+                      <SelectItem key={`student-${student.id}`} value={student.id}>
                         {student.name || student.email}
                       </SelectItem>
                     ))}
@@ -175,7 +252,7 @@ export function ScheduleMeeting({ onClose }: ScheduleMeetingProps) {
                   </SelectTrigger>
                   <SelectContent>
                     {counselors.map((counselor) => (
-                      <SelectItem key={counselor.id} value={counselor.id}>
+                      <SelectItem key={`counselor-${counselor.id}`} value={counselor.id}>
                         {counselor.name || counselor.email}
                       </SelectItem>
                     ))}
@@ -197,7 +274,7 @@ export function ScheduleMeeting({ onClose }: ScheduleMeetingProps) {
                         )}
                       >
                         <CalendarIcon className="mr-2 h-4 w-4" />
-                        {selectedDate ? format(selectedDate, "PPP") : <span>Pick a date</span>}
+                        {selectedDate ? format(selectedDate, "PPP") : <span>{t('meeting.date') || 'Pick a date'}</span>}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0">
@@ -216,7 +293,7 @@ export function ScheduleMeeting({ onClose }: ScheduleMeetingProps) {
                   <Label htmlFor="time">{t('meeting.time')} *</Label>
                   <Select value={selectedTime} onValueChange={setSelectedTime}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select time" />
+                      <SelectValue placeholder={t('meeting.time') || 'Select time'} />
                     </SelectTrigger>
                     <SelectContent>
                       {timeSlots.map((time) => (
@@ -238,10 +315,10 @@ export function ScheduleMeeting({ onClose }: ScheduleMeetingProps) {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="30">30 minutes</SelectItem>
-                      <SelectItem value="60">60 minutes</SelectItem>
-                      <SelectItem value="90">90 minutes</SelectItem>
-                      <SelectItem value="120">120 minutes</SelectItem>
+                      <SelectItem value="30">30 {t('meeting.duration') || 'minutes'}</SelectItem>
+                      <SelectItem value="60">60 {t('meeting.duration') || 'minutes'}</SelectItem>
+                      <SelectItem value="90">90 {t('meeting.duration') || 'minutes'}</SelectItem>
+                      <SelectItem value="120">120 {t('meeting.duration') || 'minutes'}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -270,7 +347,7 @@ export function ScheduleMeeting({ onClose }: ScheduleMeetingProps) {
                   id="notes"
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Add any additional notes..."
+                  placeholder={t('meeting.notes')}
                   rows={3}
                 />
               </div>
@@ -280,11 +357,31 @@ export function ScheduleMeeting({ onClose }: ScheduleMeetingProps) {
                 <Button type="button" variant="outline" onClick={onClose}>
                   {t('meeting.cancel')}
                 </Button>
-                <Button type="submit" disabled={isLoading}>
+                <Button type="submit" disabled={isLoading || !selectedStudent || !selectedCounselor || !selectedDate || !selectedTime || !meetingType}>
                   {isLoading ? t('common.loading') : t('meeting.schedule')}
                 </Button>
               </div>
             </form>
+
+            {/* Confirmation */}
+            {confirmation && (
+              <div className="mt-6 p-4 rounded-lg border bg-muted/30">
+                <div className="flex items-start gap-3">
+                  <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5" />
+                  <div className="space-y-1 text-sm">
+                    <div className="font-medium">Meeting Confirmed</div>
+                    <div>Date: {confirmation.date}</div>
+                    <div>Time: {confirmation.time}</div>
+                    <div>Duration: {confirmation.duration} minutes</div>
+                    <div>Type: {confirmation.type}</div>
+                    <div className="text-muted-foreground">Emails sent to: {confirmation.studentEmail}{confirmation.counselorEmail ? `, ${confirmation.counselorEmail}` : ''}</div>
+                  </div>
+                </div>
+                <div className="flex justify-end mt-4">
+                  <Button onClick={onClose}>{t('common.close')}</Button>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       </motion.div>

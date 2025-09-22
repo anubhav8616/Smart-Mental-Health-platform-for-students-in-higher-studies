@@ -19,6 +19,7 @@ import {
   TrendingDown,
   ClipboardCheck, // New Icon
 } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 
 interface DashboardProps {
   onSectionChange: (section: string) => void;
@@ -35,6 +36,7 @@ const getStartOfWeek = (date: Date) => {
 };
 
 export function Dashboard({ onSectionChange, userData }: DashboardProps) {
+  const { t } = useLanguage();
   const [showAssessment, setShowAssessment] = useState(false);
   const [assessmentHistory, setAssessmentHistory] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -125,25 +127,25 @@ export function Dashboard({ onSectionChange, userData }: DashboardProps) {
 
   const quickStats = [
     { 
-      title: 'Wellness Score', 
+      title: t('dashboard.wellnessScore') || 'Wellness Score', 
       value: `${wellnessScore}%`,
       icon: Heart,
       color: wellnessScore > 70 ? 'text-warm-green' : wellnessScore > 50 ? 'text-sunny-orange' : 'text-mood-red',
     },
     { 
-      title: 'Overall Trend', 
+      title: t('dashboard.overallTrend') || 'Overall Trend', 
       value: getTrend().text,
       icon: getTrend().icon,
       color: 'text-calm-blue',
     },
     { 
-      title: 'Current Streak', 
+      title: t('dashboard.currentStreak') || 'Current Streak', 
       value: '1 day',
       icon: Flame,
       color: 'text-sunny-orange',
     },
     { 
-      title: 'Goals Completed', 
+      title: t('dashboard.goalsCompleted') || 'Goals Completed', 
       value: '0/3',
       icon: Target,
       color: 'text-soft-purple',
@@ -193,8 +195,8 @@ export function Dashboard({ onSectionChange, userData }: DashboardProps) {
     <div className="min-h-screen bg-wellness-gradient">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="mb-8">
-          <h1 className="text-3xl font-medium">Welcome back, {userData?.email?.split('@')[0] || 'Student'}!</h1>
-          <p className="text-muted-foreground mt-2">Here's your mental health overview for today.</p>
+          <h1 className="text-3xl font-medium">{t('dashboard.welcome') || 'Welcome back'},{' '}{userData?.email?.split('@')[0] || 'Student'}!</h1>
+          <p className="text-muted-foreground mt-2">{t('dashboard.subtitle') || "Here's your mental health overview for today."}</p>
         </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -229,11 +231,11 @@ export function Dashboard({ onSectionChange, userData }: DashboardProps) {
                                 <ClipboardCheck className="w-8 h-8 text-indigo-500" />
                             </div>
                             <div>
-                                <h3 className="font-semibold text-lg">Wellness Check-in</h3>
+                                <h3 className="font-semibold text-lg">{t('dashboard.checkin') || 'Wellness Check-in'}</h3>
                                 <p className="text-sm text-muted-foreground">
                                     {canTakeAssessment 
-                                        ? `You have ${3 - assessmentsThisWeekCount} assessments left this week.`
-                                        : 'You have completed all assessments for this week.'}
+                                        ? t('dashboard.assessmentsLeft')?.replace('{count}', String(3 - assessmentsThisWeekCount)) || `You have ${3 - assessmentsThisWeekCount} assessments left this week.`
+                                        : t('dashboard.assessmentsDone') || 'You have completed all assessments for this week.'}
                                 </p>
                             </div>
                         </div>
@@ -242,7 +244,7 @@ export function Dashboard({ onSectionChange, userData }: DashboardProps) {
                             disabled={!canTakeAssessment}
                             className="w-auto"
                         >
-                            {canTakeAssessment ? 'Take Assessment' : 'Weekly Limit Reached'}
+                            {canTakeAssessment ? (t('dashboard.takeAssessment') || 'Take Assessment') : (t('dashboard.limitReached') || 'Weekly Limit Reached')}
                         </Button>
                     </CardContent>
                 </Card>
@@ -251,9 +253,9 @@ export function Dashboard({ onSectionChange, userData }: DashboardProps) {
             {latestAssessment && (
               <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.6 }}>
                 <Card className="border-0 shadow-lg">
-                  <CardHeader>
-                    <CardTitle className="text-lg">Your Wellness Snapshot</CardTitle>
-                    <p className="text-sm text-muted-foreground">Based on your latest assessment.</p>
+                    <CardHeader>
+                    <CardTitle className="text-lg">{t('dashboard.snapshot') || 'Your Wellness Snapshot'}</CardTitle>
+                    <p className="text-sm text-muted-foreground">{t('dashboard.snapshotDesc') || 'Based on your latest assessment.'}</p>
                   </CardHeader>
                   <CardContent>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -265,7 +267,7 @@ export function Dashboard({ onSectionChange, userData }: DashboardProps) {
                           </div>
                           <Progress value={(metric.score / metric.maxScore) * 100} />
                           <div className="flex justify-between text-sm">
-                            <span>Score: {metric.score}/{metric.maxScore}</span>
+                            <span>{t('dashboard.score') || 'Score'}: {metric.score}/{metric.maxScore}</span>
                              <Badge variant={metric.color === 'green' ? 'default' : metric.color === 'yellow' ? 'secondary' : 'destructive'}>
                               {metric.severity}
                             </Badge>
@@ -281,14 +283,14 @@ export function Dashboard({ onSectionChange, userData }: DashboardProps) {
             <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2, duration: 0.6 }}>
                 <Card className="border-0 shadow-lg">
                     <CardHeader>
-                        <CardTitle className="text-lg">Quick Actions</CardTitle>
+                        <CardTitle className="text-lg">{t('dashboard.quickActions') || 'Quick Actions'}</CardTitle>
                     </CardHeader>
                     <CardContent>
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                            <Button variant="outline" className="h-20 flex-col" onClick={() => onSectionChange('mood')}><Heart/>Log Mood</Button>
-                            <Button variant="outline" className="h-20 flex-col" onClick={() => onSectionChange('chatbot')}><Brain/>AI Support</Button>
-                            <Button variant="outline" className="h-20 flex-col" onClick={() => onSectionChange('resources')}><BookOpen/>Resources</Button>
-                            <Button variant="outline" className="h-20 flex-col" onClick={() => onSectionChange('community')}><Users/>Community</Button>
+                            <Button variant="outline" className="h-20 flex-col" onClick={() => onSectionChange('mood')}><Heart/>{t('dashboard.logMood') || 'Log Mood'}</Button>
+                            <Button variant="outline" className="h-20 flex-col" onClick={() => onSectionChange('chatbot')}><Brain/>{t('dashboard.aiSupport') || 'AI Support'}</Button>
+                            <Button variant="outline" className="h-20 flex-col" onClick={() => onSectionChange('resources')}><BookOpen/>{t('nav.resources')}</Button>
+                            <Button variant="outline" className="h-20 flex-col" onClick={() => onSectionChange('community')}><Users/>{t('nav.community')}</Button>
                         </div>
                     </CardContent>
                 </Card>
@@ -297,7 +299,7 @@ export function Dashboard({ onSectionChange, userData }: DashboardProps) {
             <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.4, duration: 0.6 }}>
               <Card className="border-0 shadow-lg">
                 <CardHeader>
-                  <CardTitle className="text-lg">Recent Activity</CardTitle>
+                  <CardTitle className="text-lg">{t('dashboard.recentActivity') || 'Recent Activity'}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
@@ -321,7 +323,7 @@ export function Dashboard({ onSectionChange, userData }: DashboardProps) {
           <div className="space-y-6">
               <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.6 }}>
                 <Card className="border-0 shadow-lg">
-                  <CardHeader><CardTitle className="text-lg">Today's Goals</CardTitle></CardHeader>
+                  <CardHeader><CardTitle className="text-lg">{t('dashboard.todaysGoals') || "Today's Goals"}</CardTitle></CardHeader>
                   <CardContent className="space-y-4">
                     {upcomingGoals.map((goal) => (
                       <div key={goal.title}>
@@ -337,7 +339,7 @@ export function Dashboard({ onSectionChange, userData }: DashboardProps) {
               </motion.div>
               <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2, duration: 0.6 }}>
                 <Card className="border-0 shadow-lg">
-                  <CardHeader><CardTitle className="text-lg">Wellness Streaks</CardTitle></CardHeader>
+                  <CardHeader><CardTitle className="text-lg">{t('dashboard.wellnessStreaks') || 'Wellness Streaks'}</CardTitle></CardHeader>
                   <CardContent className="space-y-3">
                      <div className="flex items-center justify-between p-3 rounded-lg bg-sunny-orange/10">
                         <div className="flex items-center gap-3"><Flame className="w-5 h-5 text-sunny-orange" /><span className="text-sm font-medium">Daily Check-ins</span></div>
@@ -358,9 +360,9 @@ export function Dashboard({ onSectionChange, userData }: DashboardProps) {
                 <Card className="border-0 shadow-lg bg-mood-red/5">
                   <CardContent className="p-6 text-center">
                     <AlertTriangle className="w-8 h-8 text-mood-red mx-auto mb-3"/>
-                    <h3 className="font-semibold">Need Immediate Help?</h3>
-                    <p className="text-xs text-muted-foreground mb-4">24/7 crisis support is available.</p>
-                    <Button size="sm" variant="destructive" onClick={() => onSectionChange('crisis')}>Get Support Now</Button>
+                    <h3 className="font-semibold">{t('dashboard.needHelp') || 'Need Immediate Help?'}</h3>
+                    <p className="text-xs text-muted-foreground mb-4">{t('dashboard.helpDesc') || '24/7 crisis support is available.'}</p>
+                    <Button size="sm" variant="destructive" onClick={() => onSectionChange('crisis')}>{t('dashboard.getSupport') || 'Get Support Now'}</Button>
                   </CardContent>
                 </Card>
               </motion.div>

@@ -8,6 +8,7 @@ import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Check, Upload, Save, Lock, Trash2, User, Bell, Users } from "lucide-react";
+import { useLanguage } from "../context/LanguageContext";
 
 /* ------- Simple Accessible Toggle (peer-based) ------- */
 function Toggle({
@@ -53,6 +54,7 @@ type ProfileShape = {
 };
 
 export default function Profile() {
+  const { t } = useLanguage();
   const { user } = useAuth();
   const userId = user?.id ?? null;
 
@@ -232,19 +234,19 @@ export default function Profile() {
   };
 
   if (loading) {
-    return <div className="p-8">Loading...</div>;
+    return <div className="p-8">{t('common.loading')}</div>;
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-slate-50 dark:from-slate-900 dark:to-slate-800 p-6">
       <div className="max-w-6xl mx-auto">
-        <h1 className="text-3xl font-semibold mb-6">Profile Settings</h1>
+        <h1 className="text-3xl font-semibold mb-6">{t('profile.title') || 'Profile Settings'}</h1>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-fr">
           {/* Profile Pic */}
           <Card className="rounded-2xl">
             <CardHeader>
-              <CardTitle>Profile Picture</CardTitle>
+              <CardTitle>{t('profile.picture') || 'Profile Picture'}</CardTitle>
             </CardHeader>
             <CardContent className="flex flex-col items-center gap-4">
               <Avatar className="w-24 h-24">
@@ -258,9 +260,9 @@ export default function Profile() {
               <div className="flex flex-col items-center gap-2">
                 <input id="avatarUpload" type="file" accept="image/*" onChange={handleProfilePicUpload} className="hidden" />
                 <label htmlFor="avatarUpload" className="text-indigo-600 cursor-pointer inline-flex items-center gap-2">
-                  <Upload className="w-4 h-4" /> Upload photo
+                  <Upload className="w-4 h-4" /> {t('profile.uploadPhoto') || 'Upload photo'}
                 </label>
-                <p className="text-xs text-slate-500">Recommended: square image, under 2MB</p>
+                <p className="text-xs text-slate-500">{t('profile.uploadHint') || 'Recommended: square image, under 2MB'}</p>
 
               </div>
             </CardContent>
@@ -269,11 +271,11 @@ export default function Profile() {
           {/* Account Info */}
           <Card className="rounded-2xl col-span-1 lg:col-span-2">
             <CardHeader>
-              <CardTitle>Account Info</CardTitle>
+              <CardTitle>{t('profile.accountInfo') || 'Account Info'}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label>Display Name</Label>
+                <Label>{t('profile.displayName') || 'Display Name'}</Label>
                 <div className="flex gap-3 mt-2">
                   <Input
                     value={profile.username}
@@ -281,13 +283,13 @@ export default function Profile() {
                     onKeyDown={(e) => { if (e.key === "Enter") saveAccountInfo(); }}
                   />
                   <Button onClick={saveAccountInfo} size="sm" disabled={saving} className="flex items-center gap-2">
-                    <Save className="w-4 h-4" /> {saving ? "Saving..." : "Save"}
+                    <Save className="w-4 h-4" /> {saving ? t('common.loading') : t('common.save')}
                   </Button>
                 </div>
               </div>
 
               <div>
-                <Label>Phone (optional)</Label>
+                <Label>{t('profile.phone') || 'Phone (optional)'}</Label>
                 <div className="flex gap-3 mt-2">
                   <Input
                     value={profile.phone ?? ""}
@@ -296,24 +298,24 @@ export default function Profile() {
                     onKeyDown={(e) => { if (e.key === "Enter") saveAccountInfo(); }}
                   />
                   <Button onClick={saveAccountInfo} size="sm" className="flex items-center gap-2">
-                    <Save className="w-4 h-4" /> Save
+                    <Save className="w-4 h-4" /> {t('common.save')}
                   </Button>
                 </div>
               </div>
 
               <div>
-                <Label>Hobbies / Interests</Label>
+                <Label>{t('profile.hobbies') || 'Hobbies / Interests'}</Label>
                 <Input
                   value={profile.hobbies ?? ""}
                   onChange={(e) => setProfile(p => ({ ...p, hobbies: e.target.value }))}
                   placeholder="Reading, Coding, Music"
                 />
-                <p className="text-xs text-slate-500 mt-1">Comma separated</p>
+                <p className="text-xs text-slate-500 mt-1">{t('profile.hobbiesHint') || 'Comma separated'}</p>
               </div>
 
               <div>
                 <Button variant="outline" className="flex items-center gap-2">
-                  <Lock className="w-4 h-4" /> Change password
+                  <Lock className="w-4 h-4" /> {t('profile.changePassword') || 'Change password'}
                 </Button>
               </div>
             </CardContent>
@@ -322,15 +324,15 @@ export default function Profile() {
           {/* Notifications */}
           <Card className="rounded-2xl">
             <CardHeader>
-              <CardTitle>Notifications</CardTitle>
+              <CardTitle>{t('profile.notifications') || 'Notifications'}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <Bell className="w-5 h-5 text-indigo-500" />
                   <div>
-                    <div className="font-medium">All notifications</div>
-                    <div className="text-sm text-slate-500">Master switch</div>
+                    <div className="font-medium">{t('profile.allNotifications') || 'All notifications'}</div>
+                    <div className="text-sm text-slate-500">{t('profile.masterSwitch') || 'Master switch'}</div>
                   </div>
                 </div>
                 <Toggle checked={!!profile.all_notifications} onChange={(v) => updateField("all_notifications", v)} />
@@ -340,8 +342,8 @@ export default function Profile() {
                 <div className="flex items-center gap-3">
                   <Bell className="w-5 h-5 text-indigo-500" />
                   <div>
-                    <div className="font-medium">Mood check-in reminders</div>
-                    <div className="text-sm text-slate-500">Periodic prompts</div>
+                    <div className="font-medium">{t('profile.moodReminders') || 'Mood check-in reminders'}</div>
+                    <div className="text-sm text-slate-500">{t('profile.periodicPrompts') || 'Periodic prompts'}</div>
                   </div>
                 </div>
                 <Toggle checked={!!profile.mood_reminders} onChange={(v) => updateField("mood_reminders", v)} />
@@ -351,8 +353,8 @@ export default function Profile() {
                 <div className="flex items-center gap-3">
                   <Users className="w-5 h-5 text-indigo-500" />
                   <div>
-                    <div className="font-medium">Community updates</div>
-                    <div className="text-sm text-slate-500">Group activity</div>
+                    <div className="font-medium">{t('profile.communityUpdates') || 'Community updates'}</div>
+                    <div className="text-sm text-slate-500">{t('profile.groupActivity') || 'Group activity'}</div>
                   </div>
                 </div>
                 <Toggle checked={!!profile.community_updates} onChange={(v) => updateField("community_updates", v)} />
@@ -363,28 +365,28 @@ export default function Profile() {
           {/* Privacy & Security */}
           <Card className="rounded-2xl">
             <CardHeader>
-              <CardTitle>Privacy & Security</CardTitle>
+              <CardTitle>{t('profile.privacy') || 'Privacy & Security'}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="font-medium">Email visibility</div>
-                  <div className="text-sm text-slate-500">Show email on profile</div>
+                  <div className="font-medium">{t('profile.emailVisibility') || 'Email visibility'}</div>
+                  <div className="text-sm text-slate-500">{t('profile.emailVisibilityHint') || 'Show email on profile'}</div>
                 </div>
                 <Toggle checked={!!profile.email_visible} onChange={(v) => updateField("email_visible", v)} />
               </div>
 
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="font-medium">Phone visibility</div>
-                  <div className="text-sm text-slate-500">Show phone on profile</div>
+                  <div className="font-medium">{t('profile.phoneVisibility') || 'Phone visibility'}</div>
+                  <div className="text-sm text-slate-500">{t('profile.phoneVisibilityHint') || 'Show phone on profile'}</div>
                 </div>
                 <Toggle checked={!!profile.phone_visible} onChange={(v) => updateField("phone_visible", v)} />
               </div>
 
               <div>
                 <Button variant="destructive" onClick={handleDeleteAccountClick} className="flex items-center gap-2">
-                  <Trash2 className="w-4 h-4" /> Delete Account
+                  <Trash2 className="w-4 h-4" /> {t('profile.deleteAccount') || 'Delete Account'}
                 </Button>
               </div>
             </CardContent>
