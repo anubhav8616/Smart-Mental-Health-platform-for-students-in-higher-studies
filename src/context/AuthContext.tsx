@@ -1,70 +1,66 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { supabase } from '../supabaseClient';
-import { Session, User } from '@supabase/supabase-js';
+import { createContext, useContext, useState, useEffect } from 'react';
+
+interface User {
+  id: string;
+  email: string;
+  role: 'student' | 'admin';
+}
 
 interface AuthContextType {
-  session: Session | null;
-  user: User | null;
-  role: string | null;
   isAuthenticated: boolean;
-  logout: () => Promise<void>;
+  user: User | null;
+  role: 'student' | 'admin' | null;
+  login: (user: User) => void;
+  logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [session, setSession] = useState<Session | null>(null);
+export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [role, setRole] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    const fetchSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setSession(session);
-      setUser(session?.user ?? null);
-      setRole(session?.user?.user_metadata?.role ?? null);
-      setLoading(false);
-    };
+    const storedUser = localStorage.getItem('user');
+    const storedAuth = localStorage.getItem('isAuthenticated');
 
-    fetchSession();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        setRole(session?.user?.user_metadata?.role ?? null);
-      }
-    );
-
-    return () => {
-      subscription?.unsubscribe();
-    };
+    if (storedUser && storedAuth === 'true') {
+      setUser(JSON.parse(storedUser));
+      setIsAuthenticated(true);
+    }
   }, []);
 
-  const logout = async () => {
-    await supabase.auth.signOut();
+  const login = (userData: User) => {
+    localStorage.setItem('user', JSON.stringify(userData));
+    localStorage.setItem('isAuthenticated', 'true');
+    setUser(userData);
+    setIsAuthenticated(true);
   };
 
-  const value = {
-    session,
-    user,
-    role,
-    isAuthenticated: !!user,
-    logout,
+  const logout = () => {
+    localStorage.removeItem('user');
+    localStorage.removeItem('isAuthenticated');
+    setUser(null);
+    setIsAuthenticated(false);
   };
 
   return (
-    <AuthContext.Provider value={value}>
-      {!loading && children}
+    <AuthContext.Provider
+      value={{
+        isAuthenticated,
+        user,
+        role: user?.role || null,
+        login,
+        logout,
+      }}
+    >
+      {children}
     </AuthContext.Provider>
   );
-};
+}
 
-export const useAuth = () => {
+export function useAuth() {
   const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
+  if (!context) throw new Error('useAuth must be used within AuthProvider');
   return context;
-};
+}

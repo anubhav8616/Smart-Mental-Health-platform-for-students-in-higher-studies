@@ -4,34 +4,28 @@ import { Card, CardContent } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
-import { Heart, GraduationCap, Building2, Loader2 } from 'lucide-react';
+import { Tabs, TabsList, TabsTrigger } from './ui/tabs';
+import { Heart, GraduationCap, Building2 } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 export function Auth() {
+  const { login } = useAuth();
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'student' | 'admin'>('student');
   const [isSignUp, setIsSignUp] = useState(false);
 
-  const handleAuthAction = async () => {
-    setLoading(true);
+  const handleAuthAction = () => {
+    if (!email || !password) return;
 
-    // Fake authentication (no Supabase)
-    setTimeout(() => {
-      const fakeUser = {
-        id: Date.now().toString(),
-        email,
-        role: activeTab,
-      };
+    const fakeUser = {
+      id: Date.now().toString(),
+      email,
+      role: activeTab,
+    };
 
-      // Store fake session
-      localStorage.setItem('user', JSON.stringify(fakeUser));
-      localStorage.setItem('isAuthenticated', 'true');
-
-      // Reload app so AuthContext picks it up
-      window.location.reload();
-    }, 500);
+    login(fakeUser);
   };
 
   return (
@@ -97,10 +91,8 @@ export function Auth() {
 
               <Button
                 onClick={handleAuthAction}
-                disabled={loading}
                 className="w-full h-12 bg-gradient-to-r from-calm-blue to-warm-green text-white shadow-lg"
               >
-                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {isSignUp ? 'Sign Up' : 'Sign In'}
               </Button>
 
