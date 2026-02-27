@@ -154,7 +154,7 @@ export function AIChatbot() {
                 systemPrompt,
                 ...newMessages.map(msg => ({ role: msg.role, content: msg.content }))
             ],
-            model: "gemma2-9b-it"
+            model: "llama-3.1-8b-instant"
         })
       });
       
